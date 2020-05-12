@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     `INDEX_FILEPATH="./abstracts.txt" uvicorn main:app`
     """
 
-    index_filepath: str
+    # index_filepath: str
     pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
     batch_size: int = 32
     mean_pool: bool = False
@@ -37,14 +37,19 @@ class Model(BaseModel):
 
 class Index(BaseModel):
     text: List[str] = None
+    ids: List[str] = None
     embeddings: torch.Tensor = None
 
     class Config:
         arbitrary_types_allowed = True
 
+class Document(BaseModel):
+    id: str
+    text: str
 
 class Query(BaseModel):
-    text: str
+    query: Document
+    documents: List[Document] = []
     top_k: int = 5
 
 
@@ -129,18 +134,18 @@ def app_startup():
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
 
-    with open(settings.index_filepath, "r") as f:
-        text = f.readlines()
-    embeddings = _index(text)
-    index.text = text
-    index.embeddings = embeddings
-
-
-@app.post("/query/")
+@app.post("/")
 async def query(query: Query):
     embedded_query = _encode(
-        [query.text], model.tokenizer, model.model, mean_pool=settings.mean_pool
+        [query.query.text], model.tokenizer, model.model, mean_pool=settings.mean_pool
     )
+
+    text = [ document.text for document in query.documents ]
+    ids = [ document.id for document in query.documents ]
+    embeddings = _index(text)
+    index.text = text
+    index.ids = ids
+    index.embeddings = embeddings
 
     cos = torch.nn.CosineSimilarity(-1)
     similarity_scores = cos(embedded_query, index.embeddings)
@@ -149,7 +154,4 @@ async def query(query: Query):
     top_k_scores = top_k_scores.tolist()
     top_k_indicies = top_k_indicies.tolist()
 
-    return {
-        "scores": top_k_scores,
-        "text": [index.text[idx] for idx in top_k_indicies],
-    }
+    return [ { "id": index.ids[idx], "score": top_k_scores[num] } for num, idx in enumerate( top_k_indicies ) ]
