@@ -44,7 +44,7 @@ class Index(BaseModel):
 
 
 class Document(BaseModel):
-    id: str
+    uid: str
     text: str
 
 
@@ -143,7 +143,7 @@ async def query(query: Query):
     )
 
     text = [document.text for document in query.documents]
-    ids = [document.id for document in query.documents]
+    ids = [document.uid for document in query.documents]
     embeddings = _index(text)
     index.text = text
     index.ids = ids
@@ -157,5 +157,5 @@ async def query(query: Query):
     top_k_indicies = top_k_indicies.tolist()
 
     return [
-        {"id": index.ids[idx], "score": top_k_scores[num]} for num, idx in enumerate(top_k_indicies)
+        {"uid": index.ids[idx], "score": top_k_scores[num]} for num, idx in enumerate(top_k_indicies)
     ]
