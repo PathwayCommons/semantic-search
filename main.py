@@ -51,7 +51,7 @@ class Document(BaseModel):
 class Query(BaseModel):
     query: Document
     documents: List[Document] = []
-    top_k: int = 5
+    top_k: int = None
 
 
 settings = Settings()
@@ -151,11 +151,14 @@ async def query(query: Query):
 
     cos = torch.nn.CosineSimilarity(-1)
     similarity_scores = cos(embedded_query, index.embeddings)
-    top_k_scores, top_k_indicies = torch.topk(similarity_scores, query.top_k)
+    # If top_k not specified, return all documents.
+    top_k = query.top_k or similarity_scores.size(0)
+    top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
 
     top_k_scores = top_k_scores.tolist()
     top_k_indicies = top_k_indicies.tolist()
 
     return [
-        {"uid": index.ids[idx], "score": top_k_scores[num]} for num, idx in enumerate(top_k_indicies)
+        {"uid": index.ids[idx], "score": top_k_scores[num]}
+        for num, idx in enumerate(top_k_indicies)
     ]
