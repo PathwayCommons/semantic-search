@@ -39,6 +39,10 @@ uvicorn main:app
 
 You can then make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents.
 
+```bash
+curl --header "Content-Type: application/json" --request POST --data '{"query":{"id":"someid","text":"The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms."},"documents":[{"id":"9887103","text":"The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development.\n"},{"id":"30049242","text":"Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection.\n"},{"id":"22936248","text":"High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression.\n"}],"top_k":3}' http://localhost:8000/
+```
+
 
 ## Documentation
 
