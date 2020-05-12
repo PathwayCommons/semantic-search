@@ -28,20 +28,17 @@ pip install -r requirements.txt
 
 ## Usage
 
-You will need to prepare an index of text to search against, this is simply a text file with one text instance per line ([abstracts.txt](abstracts.txt) is provided for demo purposes). Then, start up the server with the path to this index:
+To start up the server:
 
 
 ```bash
-INDEX_FILEPATH="abstracts.txt"  uvicorn main:app
+uvicorn main:app
 ```
 
-Then you can make a POST request with some query text, and it will return the `top_k` most similar articles from the index:
+> You can pass the `--reload` flag if you are developing to force the server to reload on changes.
 
-```bash
-curl \
- --data "text=Pathway switching in target cells is a previously unreported mechanism for regulating TGFbeta signaling." \
- http://127.0.0.1:8000/query
-```
+You can then make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents.
+
 
 ## Documentation
 
