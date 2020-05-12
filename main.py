@@ -152,9 +152,11 @@ async def query(query: Query):
     cos = torch.nn.CosineSimilarity(-1)
     similarity_scores = cos(embedded_query, index.embeddings)
     # If top_k not specified, return all documents.
-    top_k = query.top_k or similarity_scores.size(0)
-    top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
+    top_k = similarity_scores.size(0)
+    if query.top_k is not None:
+        top_k = max( min(query.top_k, len(query.documents)), 0)
 
+    top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
     top_k_scores = top_k_scores.tolist()
     top_k_indicies = top_k_indicies.tolist()
 
