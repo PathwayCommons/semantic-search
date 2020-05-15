@@ -115,7 +115,12 @@ def _encode(
     model: PreTrainedModel,
     mean_pool: bool = False,
 ):
-    inputs = tokenizer.batch_encode_plus(text, pad_to_max_length=True, return_tensors="pt")
+    # HACK (John): This will save us in the case of tokenizers with no default max_length
+    # Why does this happen? Open an issue on Transformers.
+    max_length = tokenizer.max_length if hasattr(tokenizer, "max_length") else 512
+    inputs = tokenizer.batch_encode_plus(
+        text, pad_to_max_length=True, max_length=max_length, return_tensors="pt"
+    )
     sequence_output, _ = model(**inputs)
 
     if mean_pool:
@@ -154,7 +159,7 @@ async def query(query: Query):
     # If top_k not specified, return all documents.
     top_k = similarity_scores.size(0)
     if query.top_k is not None:
-        top_k = max( min(query.top_k, len(query.documents)), 0)
+        top_k = max(min(query.top_k, len(query.documents)), 0)
 
     top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
     top_k_scores = top_k_scores.tolist()
