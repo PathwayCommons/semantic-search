@@ -28,20 +28,21 @@ pip install -r requirements.txt
 
 ## Usage
 
-You will need to prepare an index of text to search against, this is simply a text file with one text instance per line ([abstracts.txt](abstracts.txt) is provided for demo purposes). Then, start up the server with the path to this index:
+To start up the server:
 
 
 ```bash
-INDEX_FILEPATH="abstracts.txt"  uvicorn main:app
+uvicorn main:app
 ```
 
-Then you can make a POST request with some query text, and it will return the `top_k` most similar articles from the index:
+> You can pass the `--reload` flag if you are developing to force the server to reload on changes.
+
+You can then make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents (if `top_k` is not provided, defaults to returning all documents).
 
 ```bash
-curl \
- --data "text=Pathway switching in target cells is a previously unreported mechanism for regulating TGFbeta signaling." \
- http://127.0.0.1:8000/query
+curl --header "Content-Type: application/json" --request POST --data '{"query":{"uid":"someid","text":"The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms."},"documents":[{"uid":"9887103","text":"The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development.\n"},{"uid":"30049242","text":"Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection.\n"},{"uid":"22936248","text":"High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression.\n"}],"top_k":3}' http://localhost:8000/
 ```
+
 
 ## Documentation
 

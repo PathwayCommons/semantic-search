@@ -17,10 +17,9 @@ class Settings(BaseSettings):
     """Store global settings for the web-service. Pass these as enviornment variables at server
     startup. E.g.
 
-    `INDEX_FILEPATH="./abstracts.txt" uvicorn main:app`
+    `MEAN_POOL=True uvicorn main:app`
     """
 
-    index_filepath: str
     pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
     batch_size: int = 32
     mean_pool: bool = False
@@ -37,15 +36,22 @@ class Model(BaseModel):
 
 class Index(BaseModel):
     text: List[str] = None
+    ids: List[str] = None
     embeddings: torch.Tensor = None
 
     class Config:
         arbitrary_types_allowed = True
 
 
-class Query(BaseModel):
+class Document(BaseModel):
+    uid: str
     text: str
-    top_k: int = 5
+
+
+class Query(BaseModel):
+    query: Document
+    documents: List[Document] = []
+    top_k: int = None
 
 
 settings = Settings()
@@ -109,7 +115,12 @@ def _encode(
     model: PreTrainedModel,
     mean_pool: bool = False,
 ):
-    inputs = tokenizer.batch_encode_plus(text, pad_to_max_length=True, return_tensors="pt")
+    # HACK (John): This will save us in the case of tokenizers with no default max_length
+    # Why does this happen? Open an issue on Transformers.
+    max_length = tokenizer.max_length if hasattr(tokenizer, "max_length") else 512
+    inputs = tokenizer.batch_encode_plus(
+        text, pad_to_max_length=True, max_length=max_length, return_tensors="pt"
+    )
     sequence_output, _ = model(**inputs)
 
     if mean_pool:
@@ -129,27 +140,32 @@ def app_startup():
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
 
-    with open(settings.index_filepath, "r") as f:
-        text = f.readlines()
-    embeddings = _index(text)
-    index.text = text
-    index.embeddings = embeddings
 
-
-@app.post("/query/")
+@app.post("/")
 async def query(query: Query):
     embedded_query = _encode(
-        [query.text], model.tokenizer, model.model, mean_pool=settings.mean_pool
+        [query.query.text], model.tokenizer, model.model, mean_pool=settings.mean_pool
     )
+
+    text = [document.text for document in query.documents]
+    ids = [document.uid for document in query.documents]
+    embeddings = _index(text)
+    index.text = text
+    index.ids = ids
+    index.embeddings = embeddings
 
     cos = torch.nn.CosineSimilarity(-1)
     similarity_scores = cos(embedded_query, index.embeddings)
-    top_k_scores, top_k_indicies = torch.topk(similarity_scores, query.top_k)
+    # If top_k not specified, return all documents.
+    top_k = similarity_scores.size(0)
+    if query.top_k is not None:
+        top_k = max(min(query.top_k, len(query.documents)), 0)
 
+    top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
     top_k_scores = top_k_scores.tolist()
     top_k_indicies = top_k_indicies.tolist()
 
-    return {
-        "scores": top_k_scores,
-        "text": [index.text[idx] for idx in top_k_indicies],
-    }
+    return [
+        {"uid": index.ids[idx], "score": top_k_scores[num]}
+        for num, idx in enumerate(top_k_indicies)
+    ]
