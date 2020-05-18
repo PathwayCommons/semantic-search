@@ -37,7 +37,7 @@ docker build -t semantic-search .
 Then, run it
 
 ```bash
-docker run -it -p 8000:8000 semantic-search
+docker run -it -p <PORT>:8000 semantic-search
 ```
 
 ## Usage
