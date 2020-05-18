@@ -26,6 +26,20 @@ pip install "fastapi[all]"
 pip install -r requirements.txt
 ```
 
+## Running via Docker
+
+First, build the docker image
+
+```bash
+docker build -t semantic-search .
+```
+
+Then, run it
+
+```bash
+docker run -it -p 8000:8000 semantic-search
+```
+
 ## Usage
 
 To start up the server:
