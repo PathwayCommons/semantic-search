@@ -43,6 +43,19 @@ You can then make a POST request with some query text and some documents to sear
 curl --header "Content-Type: application/json" --request POST --data '{"query":{"uid":"someid","text":"The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms."},"documents":[{"uid":"9887103","text":"The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development.\n"},{"uid":"30049242","text":"Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection.\n"},{"uid":"22936248","text":"High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression.\n"}],"top_k":3}' http://localhost:8000/
 ```
 
+### Running via Docker
+
+First, build the docker image
+
+```bash
+docker build -t semantic-search .
+```
+
+Then, run it
+
+```bash
+docker run -it -p <PORT>:8000 semantic-search
+```
 
 ## Documentation
 
