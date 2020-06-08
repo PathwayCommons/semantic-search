@@ -19,11 +19,10 @@ git clone https://github.com/BaderLab/semantic-search.git
 cd semantic-search
 ```
 
-Then, install the requirements
+Then, install
 
 ```bash
-pip install "fastapi[all]"
-pip install -r requirements.txt
+pip install -e .
 ```
 
 ## Usage
