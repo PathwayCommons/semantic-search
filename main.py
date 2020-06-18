@@ -60,12 +60,14 @@ def _get_device(cuda_device):
     if cuda_device != -1 and torch.cuda.is_available():
         device = torch.device("cuda")
         typer.secho(
-            f"{FAST} Using CUDA device {device}", fg=typer.colors.GREEN, bold=True,
+            f"{FAST} Using CUDA device {torch.cuda.get_device_name()} with index {torch.cuda.current_device()}.",
+            fg=typer.colors.GREEN,
+            bold=True,
         )
     else:
         device = torch.device("cpu")
         typer.secho(
-            f"{SUCCESS} Using CPU. Note that this will be many times slower than a GPU.",
+            f"{WARNING} Using CPU. Note that this will be many times slower than a GPU.",
             fg=typer.colors.YELLOW,
             bold=True,
         )
