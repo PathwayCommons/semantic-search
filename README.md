@@ -12,7 +12,7 @@ Before installing, you should create and activate a Python virtual environment. 
 
 ### Installing the library and dependencies
 
-First, clone the repository locally
+First, clone the repository locally:
 
 ```bash
 git clone https://github.com/BaderLab/semantic-search.git
@@ -37,7 +37,13 @@ uvicorn main:app
 
 > You can pass the `--reload` flag if you are developing to force the server to reload on changes.
 
-You can then make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents (if `top_k` is not provided, defaults to returning all documents).
+To provide arguments to the server, pass them as environment variables, e.g.:
+
+```bash
+CUDA_DEVICE=0 uvicorn main:app
+```
+
+Once the server is running, you can make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents (if `top_k` is not provided, defaults to returning all documents), e.g.:
 
 ```bash
 curl --header "Content-Type: application/json" --request POST --data '{"query":{"uid":"someid","text":"The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms."},"documents":[{"uid":"9887103","text":"The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development.\n"},{"uid":"30049242","text":"Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection.\n"},{"uid":"22936248","text":"High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression.\n"}],"top_k":3}' http://localhost:8000/
@@ -45,7 +51,7 @@ curl --header "Content-Type: application/json" --request POST --data '{"query":{
 
 ### Running via Docker
 
-First, build the docker image
+First, build the docker image:
 
 ```bash
 docker build -t semantic-search .
