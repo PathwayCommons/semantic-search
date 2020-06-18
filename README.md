@@ -25,10 +25,11 @@ Then, install
 pip install -e .
 ```
 
+Finally, if you would like to take advantage of a CUDA-enabled GPU, you must also install [PyTorch](https://pytorch.org/) with [CUDA](https://developer.nvidia.com/cuda-zone) support by following the instructions for your system [here](https://pytorch.org/get-started/locally/).
+
 ## Usage
 
 To start up the server:
-
 
 ```bash
 uvicorn main:app
