@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple, Optional
 
 import torch
 import typer
@@ -17,14 +17,15 @@ app = FastAPI()
 
 
 class Settings(BaseSettings):
-    """Store global settings for the web-service. Pass these as enviornment variables at server
+    """Store global settings for the web-service. Pass these as environment variables at server
     startup. E.g.
 
-    `CUDA_DEVICE=0 uvicorn main:app`
+    `CUDA_DEVICE=0 BATCH_SIZE=64 MAX_LENGTH=384 uvicorn main:app`
     """
 
     pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
     batch_size: int = 32
+    max_length: Optional[int] = None
     mean_pool: bool = True
     cuda_device: int = -1
 
@@ -107,7 +108,9 @@ def _encode(
 ) -> torch.Tensor:
     # HACK (John): This will save us in the case of tokenizers with no default max_length
     # Why does this happen? Open an issue on Transformers.
-    max_length = tokenizer.max_length if hasattr(tokenizer, "max_length") else 512
+    max_length = settings.max_length or (
+        tokenizer.max_length if hasattr(tokenizer, "max_length") else 512
+    )
     inputs = tokenizer.batch_encode_plus(
         text, pad_to_max_length=True, max_length=max_length, return_tensors="pt"
     )
