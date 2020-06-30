@@ -101,19 +101,13 @@ def _setup_model_and_tokenizer(
 
 @torch.no_grad()
 def _encode(
-    text: List[str],
-    tokenizer: PreTrainedTokenizer,
-    model: PreTrainedModel,
-    mean_pool: bool = False,
+    text: List[str], tokenizer: PreTrainedTokenizer, model: PreTrainedModel, mean_pool: bool = True,
 ) -> torch.Tensor:
-    # HACK (John): This will save us in the case of tokenizers with no default max_length
-    # Why does this happen? Open an issue on Transformers.
-    max_length = settings.max_length or (
-        tokenizer.max_length if hasattr(tokenizer, "max_length") else 512
+
+    inputs = tokenizer(
+        text, padding=True, truncation=True, max_length=settings.max_length, return_tensors="pt"
     )
-    inputs = tokenizer.batch_encode_plus(
-        text, pad_to_max_length=True, max_length=max_length, return_tensors="pt"
-    )
+
     for name, tensor in inputs.items():
         inputs[name] = tensor.to(model.device)
     sequence_output, _ = model(**inputs)
