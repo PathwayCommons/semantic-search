@@ -1,4 +1,5 @@
-from typing import Callable, Dict, List, Tuple, Optional
+from operator import itemgetter
+from typing import Callable, Dict, List, Optional, Tuple
 
 import torch
 import typer
@@ -123,6 +124,14 @@ def _encode(
 
 
 def encode(text: List[str]) -> torch.Tensor:
+    # Sort the inputs by length, maintaining the original indices so we can un-sort
+    # before returning the embeddings. This speeds up embedding by minimizing the
+    # amount of computation performed on pads. Because this sorting happens before
+    # tokenization, it is only a proxy of the true lengths of the inputs to the model.
+    # In the future, it would be better to sort by length *after* tokenization which
+    # would lead to an even larger speedup.
+    unsorted_indices, text = zip(*sorted(enumerate(text), key=itemgetter(1)))
+
     embeddings = []
     for i in range(0, len(text), settings.batch_size):
         embedding = _encode(
@@ -133,6 +142,11 @@ def encode(text: List[str]) -> torch.Tensor:
         )
         embeddings.append(embedding)
     embeddings = torch.cat(embeddings)
+
+    # Unsort the embedded text so that it is returned in the same order it was recieved.
+    unsorted_indices = torch.as_tensor(unsorted_indices, dtype=torch.long, device=embeddings.device)
+    embeddings = torch.index_select(embeddings, dim=0, index=unsorted_indices)
+
     return embeddings
 
 
