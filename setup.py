@@ -37,8 +37,8 @@ setuptools.setup(
     python_requires=">=3.6.0",
     install_requires=[
         "fastapi[all]>=0.58.1",
-        "torch>=1.5.0",
-        "transformers>=3.0.0",
+        "torch>=1.5.1",
+        "transformers>=3.0.2",
         "typer>=0.3.0",
     ],
     extras_require={"dev": ["black", "flake8", "pytest"]},
