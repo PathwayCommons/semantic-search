@@ -40,7 +40,7 @@ uvicorn main:app
 To provide arguments to the server, pass them as environment variables, e.g.:
 
 ```bash
-`CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
+CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app
 ```
 
 Once the server is running, you can make a POST request with some query text and some documents to search against, and it will return the `top_k` most similar documents (if `top_k` is not provided, defaults to returning all documents), e.g.:
