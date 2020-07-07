@@ -21,11 +21,11 @@ class Settings(BaseSettings):
     """Store global settings for the web-service. Pass these as environment variables at server
     startup. E.g.
 
-    `CUDA_DEVICE=0 BATCH_SIZE=64 MAX_LENGTH=384 uvicorn main:app`
+    `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
     """
 
     pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
-    batch_size: int = 32
+    batch_size: int = 64
     max_length: Optional[int] = None
     mean_pool: bool = True
     cuda_device: int = -1
