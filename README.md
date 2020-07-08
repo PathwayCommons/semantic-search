@@ -93,6 +93,12 @@ Then, run it
 docker run -it -p <PORT>:8000 semantic-search
 ```
 
+For CUDA-enabled GPU
+
+```
+docker run --gpus all -dt --rm --name semantic_container -p 8000:8000 --env CUDA_DEVICE=0 --env MAX_LENGTH=384 semantic-search:latest
+```
+
 ## Documentation
 
 With the web server running, open [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) in your browser for the API documentation.
