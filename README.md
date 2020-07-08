@@ -51,6 +51,36 @@ curl --header "Content-Type: application/json" --request POST --data '{"query":{
 
 ### Running via Docker
 
+#### Setup
+
+If you are intending on using a CUDA-enabled GPU, you must also install the NVIDIA Container Toolkit on the host following the instructions for your system [here](https://github.com/NVIDIA/nvidia-docker).
+
+For Ubuntu 18.04:
+
+```
+curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | sudo apt-key add -
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.list |\
+    sudo tee /etc/apt/sources.list.d/nvidia-container-runtime.list
+sudo apt-get update
+sudo apt-get install nvidia-container-runtime
+```
+
+Restart Docker
+
+```
+sudo systemctl stop docker
+sudo systemctl start docker
+```
+
+Check your install
+
+```
+docker run --gpus all nvidia/cuda:10.2-cudnn7-devel nvidia-smi
+```
+
+#### Running a container
+
 First, build the docker image:
 
 ```bash

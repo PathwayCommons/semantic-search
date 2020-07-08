@@ -1,3 +1,6 @@
+FROM nvidia/cuda:10.2-base
+CMD nvidia-smi
+
 FROM python:3
 
 ADD . /
