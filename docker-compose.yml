@@ -6,5 +6,6 @@ services:
     ports:
       - "${SEMANTIC_PORT:-8000}:8000"
     environment:
-      CUDA_DEVICE:
       MAX_LENGTH:
+      CUDA_DEVICE:
+

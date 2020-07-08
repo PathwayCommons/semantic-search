@@ -1,10 +1,7 @@
-FROM nvidia/cuda:10.2-base
-CMD nvidia-smi
-
-FROM python:3
+FROM tiangolo/python-machine-learning:cuda9.1-python3.7
 
 ADD . /
 
 RUN pip install -e .
 
-ENTRYPOINT ["uvicorn","main:app","--host","0.0.0.0"]
+CMD ["uvicorn","main:app","--host","0.0.0.0"]
