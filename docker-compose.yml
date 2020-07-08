@@ -1,0 +1,10 @@
+version: "3.8"
+services:
+  semantic:
+    image: pathwaycommons/semantic-search:${SEMANTIC_SEARCH_IMAGE_TAG:-latest}
+    container_name: semantic_container
+    ports:
+      - "${SEMANTIC_PORT:-8000}:8000"
+    environment:
+      CUDA_DEVICE:
+      MAX_LENGTH:
