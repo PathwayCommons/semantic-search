@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
     """
 
-    pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
+    pretrained_model_name_or_path: str = "johngiorgi/declutr-small"
     batch_size: int = 64
     max_length: Optional[int] = None
     mean_pool: bool = True
@@ -111,7 +111,7 @@ def _encode(
 
     for name, tensor in inputs.items():
         inputs[name] = tensor.to(model.device)
-    sequence_output, _ = model(**inputs)
+    sequence_output, _ = model(**inputs, output_hidden_states=False)
 
     if mean_pool:
         embedding = torch.sum(
