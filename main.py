@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
     """
 
-    pretrained_model_name_or_path: str = "allenai/scibert_scivocab_uncased"
+    pretrained_model_name_or_path: str = "johngiorgi/declutr-small"
     batch_size: int = 64
     max_length: Optional[int] = None
     mean_pool: bool = True
@@ -111,7 +111,7 @@ def _encode(
 
     for name, tensor in inputs.items():
         inputs[name] = tensor.to(model.device)
-    sequence_output, _ = model(**inputs)
+    sequence_output, _ = model(**inputs, output_hidden_states=False)
 
     if mean_pool:
         embedding = torch.sum(
@@ -130,7 +130,8 @@ def encode(text: List[str]) -> torch.Tensor:
     # tokenization, it is only a proxy of the true lengths of the inputs to the model.
     # In the future, it would be better to sort by length *after* tokenization which
     # would lead to an even larger speedup.
-    unsorted_indices, text = zip(*sorted(enumerate(text), key=itemgetter(1)))
+    sorted_indices, text = zip(*sorted(enumerate(text), key=itemgetter(1)))
+    unsorted_indices, _ = zip(*sorted(enumerate(sorted_indices), key=itemgetter(1)))
 
     embeddings = []
     for i in range(0, len(text), settings.batch_size):
@@ -173,6 +174,7 @@ async def query(query: Query) -> List[Dict[str, float]]:
         top_k = max(min(query.top_k, len(query.documents)), 0)
     top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
     top_k_scores = top_k_scores.tolist()
-    top_k_indicies = top_k_indicies.tolist()
+    # Offset the indices by 1 to account for the query
+    top_k_indicies = [idx.item() + 1 for idx in top_k_indicies]
 
     return [{"uid": ids[idx], "score": top_k_scores[num]} for num, idx in enumerate(top_k_indicies)]
