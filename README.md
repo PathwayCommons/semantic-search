@@ -90,7 +90,7 @@ Once the server is running, you can make a POST request with:
     ]
     ```
 
-    NB: In this case, each `uid` in `documents` should be unique, but otherwise have no meaning.
+    - NB: In this case, each `uid` in `documents` should be unique, but otherwise have no meaning.
 
 2. JSON body that references PubMed article uids. Sample JSON request:
 
@@ -102,7 +102,9 @@ Once the server is running, you can make a POST request with:
     }
     ```
 
-    NB:  You may use either objects (as in Case 1) or PMID strings for `query` and elements of `documents`. However, the elements of `documents` must either be all PMIDs or all objects.
+    - Notes:
+      - For each Document element, the text consists of the `ArticleTitle` appended to `Abstract` for that PubMed article. See [pubmed DTD](https://dtd.nlm.nih.gov/ncbi/pubmed/doc/out/180101/index.html)
+      - JSON body may consist of either objects (as in Case 1) or PMID strings for `query` and elements of `documents`. However, the elements of `documents` must either be all be a single type.
 
 ### Running via Docker
 
