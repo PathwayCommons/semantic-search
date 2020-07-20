@@ -10,10 +10,10 @@ import xmltodict
 MAX_EFETCH_RETMAX = 10000
 dir_path = os.path.dirname(os.path.realpath(__file__))
 load_dotenv(os.path.join(dir_path, '.env'))
-ncbi_pubdate_pattern = re.compile(r"^(?P<year>\d{4})(\s(?P<month>[a-zA-Z\-]+))?(\s(?P<day>\d{1,2}))?$")
-ncbi_month_pattern = re.compile(r"^[a-zA-Z]{3}$")
 year_pattern = re.compile(r"(?P<year>\d{4})")
 number_pattern = re.compile(r"^[0-9]+$")
+# ncbi_pubdate_pattern = re.compile(r"^(?P<year>\d{4})(\s(?P<month>[a-zA-Z\-]+))?(\s(?P<day>\d{1,2}))?$")
+# ncbi_month_pattern = re.compile(r"^[a-zA-Z]{3}$")
 
 
 class Settings(BaseSettings):
@@ -219,7 +219,6 @@ def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
         lower = i * MAX_EFETCH_RETMAX
         upper = min([lower + MAX_EFETCH_RETMAX, num_uids])
         id = uids[lower:upper]
-        print(f"Retrieving uids between {lower} and {upper}")
         try:
             eutil_response = _get_eutil_records('efetch', id)
             ERROR = _get(eutil_response, ["eFetchResult", "ERROR"])
