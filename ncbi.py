@@ -6,7 +6,6 @@ from typing import List, Dict, Optional, Any, Union
 import requests
 import xmltodict
 
-
 # -- Setup and initialization --
 MAX_EFETCH_RETMAX = 10000
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -199,7 +198,7 @@ def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
     docs = []
     for pubmed_article in articles:
         abstract = pubmed_article.MedlineCitation.Article.Abstract
-        title = ""  # pubmed_article.MedlineCitation.Article.ArticleTitle
+        title = pubmed_article.MedlineCitation.Article.ArticleTitle
         text = " ".join(_compact([title, abstract]))
         pmid = pubmed_article.MedlineCitation.PMID
         docs.append({
@@ -213,12 +212,14 @@ def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
 def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
     """Return uid, and text (i.e. title + abstract) given a PubMed uid
     """
+    docs = []
     num_uids = len(uids)
     num_queries = num_uids // MAX_EFETCH_RETMAX + 1
     for i in range(num_queries):
         lower = i * MAX_EFETCH_RETMAX
         upper = min([lower + MAX_EFETCH_RETMAX, num_uids])
         id = uids[lower:upper]
+        print(f"Retrieving uids between {lower} and {upper}")
         try:
             eutil_response = _get_eutil_records('efetch', id)
             ERROR = _get(eutil_response, ["eFetchResult", "ERROR"])
@@ -232,4 +233,5 @@ def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
         else:
             articles = pubmedArticle if isinstance(pubmedArticle, list) else [pubmedArticle]
             output = _articles_to_docs(articles)
-            return output
+            docs = docs + output
+    return docs

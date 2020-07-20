@@ -50,9 +50,17 @@ class Document(BaseModel):
 
 
 class Query(BaseModel):
-    query: Document
+    query: Union[Document, UID]
     documents: List[Union[Document, UID]] = []
     top_k: int = None
+
+    @validator('query')
+    def normalize_document(cls, v):
+        if isinstance(v, UID):
+            docs = uids_to_docs([v])
+            return Document(**docs[0])
+        else:
+            return v
 
     @validator('documents')
     def normalize_documents(cls, v):
