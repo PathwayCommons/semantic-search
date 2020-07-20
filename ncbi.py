@@ -150,12 +150,12 @@ class PubmedEfetchResponse(BaseModel):
 # -- NCBI EUTILS --
 def _safe_request(url: str, method: str = 'GET', headers={}, **opts):
     user_agent = f"{settings.app_name}/{settings.app_version} ({settings.app_url};mailto:{settings.admin_email})"
-    DEFAULT_HEADERS = {
+    request_headers = {
         "user-agent": user_agent
     }
-    h = DEFAULT_HEADERS.update(headers)
+    request_headers.update(headers)
     try:
-        r = requests.request(method, url, headers=h, timeout=settings.http_request_timeout, **opts)
+        r = requests.request(method, url, headers=request_headers, timeout=settings.http_request_timeout, **opts)
         r. raise_for_status()
     except requests.exceptions.Timeout as e:
         print(f"Timeout error {e}")
