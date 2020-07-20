@@ -1,11 +1,12 @@
 from operator import itemgetter
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 import typer
 from fastapi import FastAPI
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel, BaseSettings, validator
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+from ncbi import uids_to_docs
 
 # Emoji's used in typer.secho calls
 # See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
@@ -40,15 +41,25 @@ class Model(BaseModel):
         arbitrary_types_allowed = True
 
 
+UID = str
+
+
 class Document(BaseModel):
-    uid: str
+    uid: UID
     text: str
 
 
 class Query(BaseModel):
     query: Document
-    documents: List[Document] = []
+    documents: List[Union[Document, UID]] = []
     top_k: int = None
+
+    @validator('documents')
+    def normalize_documents(cls, v):
+        if all(isinstance(x, UID) for x in v):
+            return [Document(**k) for k in uids_to_docs(v)]
+        else:
+            return v
 
 
 settings = Settings()

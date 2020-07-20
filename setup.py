@@ -40,6 +40,7 @@ setuptools.setup(
         "torch>=1.5.1",
         "transformers>=3.0.2",
         "typer>=0.3.0",
+        "python-dotenv>=0.14.0"
     ],
     extras_require={"dev": ["black", "flake8", "pytest"]},
 )
