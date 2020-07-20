@@ -43,9 +43,9 @@ To provide arguments to the server, pass them as environment variables, e.g.:
 CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app
 ```
 
-Once the server is running, you can make a POST request to with JSON body that is
+Once the server is running, you can make a POST request with:
 
-1. Self-contained: Provide a `query` text and set of text `documents` to search against.  Sample JSON request:
+1. JSON body that is self-contained. Provide the text in `query` and text in `documents` to search against. Sample JSON request:
 
     ```json
     {
@@ -92,7 +92,7 @@ Once the server is running, you can make a POST request to with JSON body that i
 
     NB: In this case, each `uid` in `documents` should be unique, but otherwise have no meaning.
 
-2. References uids for PubMed articles. Sample JSON request:
+2. JSON body that references PubMed article uids. Sample JSON request:
 
     ```json
     {
@@ -102,7 +102,7 @@ Once the server is running, you can make a POST request to with JSON body that i
     }
     ```
 
-    NB:  You may use either objects (as in Case 1) or PMID strings for `query` and/or elements of `documents`. Howwever, the `documents` elements must all be of one type.
+    NB:  You may use either objects (as in Case 1) or PMID strings for `query` and elements of `documents`. However, the elements of `documents` must either be all PMIDs or all objects.
 
 ### Running via Docker
 
