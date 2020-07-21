@@ -32,7 +32,7 @@ Finally, if you would like to take advantage of a CUDA-enabled GPU, you must als
 To start up the server:
 
 ```bash
-uvicorn main:app
+uvicorn semantic_search.main:app
 ```
 
 > You can pass the `--reload` flag if you are developing to force the server to reload on changes.
@@ -40,7 +40,7 @@ uvicorn main:app
 To provide arguments to the server, pass them as environment variables, e.g.:
 
 ```bash
-CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app
+CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app
 ```
 
 Once the server is running, you can make a POST request with:
