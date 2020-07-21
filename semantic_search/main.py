@@ -6,7 +6,10 @@ import typer
 from fastapi import FastAPI
 from pydantic import BaseModel, BaseSettings, validator
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+
 from semantic_search.ncbi import uids_to_docs
+
+UID = str
 
 # Emoji's used in typer.secho calls
 # See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
@@ -39,9 +42,6 @@ class Model(BaseModel):
 
     class Config:
         arbitrary_types_allowed = True
-
-
-UID = str
 
 
 class Document(BaseModel):
