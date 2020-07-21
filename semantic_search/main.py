@@ -6,7 +6,7 @@ import typer
 from fastapi import FastAPI
 from pydantic import BaseModel, BaseSettings, validator
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
-from ncbi import uids_to_docs
+from semantic_search.ncbi import uids_to_docs
 
 # Emoji's used in typer.secho calls
 # See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     """Store global settings for the web-service. Pass these as environment variables at server
     startup. E.g.
 
-    `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
+    `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app`
     """
 
     pretrained_model_name_or_path: str = "johngiorgi/declutr-small"
@@ -54,7 +54,7 @@ class Query(BaseModel):
     documents: List[Union[Document, UID]] = []
     top_k: int = None
 
-    @validator('query')
+    @validator("query")
     def normalize_document(cls, v):
         if isinstance(v, UID):
             docs = uids_to_docs([v])
@@ -62,7 +62,7 @@ class Query(BaseModel):
         else:
             return v
 
-    @validator('documents')
+    @validator("documents")
     def normalize_documents(cls, v):
         if all(isinstance(x, UID) for x in v):
             return [Document(**k) for k in uids_to_docs(v)]

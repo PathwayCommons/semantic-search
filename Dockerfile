@@ -4,4 +4,4 @@ ADD . /
 
 RUN pip install -e .
 
-CMD ["uvicorn","main:app","--host","0.0.0.0"]
+CMD ["uvicorn", "semantic_search.main:app", "--host", "0.0.0.0"]

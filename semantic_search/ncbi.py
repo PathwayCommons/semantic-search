@@ -1,15 +1,17 @@
 import os
 import re
-from dotenv import load_dotenv
-from pydantic import BaseSettings, BaseModel, validator
-from typing import List, Dict, Optional, Any, Union
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
+
 import requests
 import xmltodict
+from dotenv import load_dotenv
+from pydantic import BaseModel, BaseSettings, validator
 
 # -- Setup and initialization --
 MAX_EFETCH_RETMAX = 10000
-dir_path = os.path.dirname(os.path.realpath(__file__))
-load_dotenv(os.path.join(dir_path, '.env'))
+dot_env_filepath = Path(__file__).absolute().parent.parent / ".env"
+load_dotenv(dot_env_filepath)
 year_pattern = re.compile(r"(?P<year>\d{4})")
 number_pattern = re.compile(r"^[0-9]+$")
 # ncbi_pubdate_pattern = re.compile(r"^(?P<year>\d{4})(\s(?P<month>[a-zA-Z\-]+))?(\s(?P<day>\d{1,2}))?$")
@@ -64,7 +66,7 @@ class PubDate(BaseModel):
     Season: Optional[str]
     MedlineDate: Optional[str]
 
-    @validator('MedlineDate')
+    @validator("MedlineDate")
     def populate_year(cls, v, values):
         year_match = year_pattern.match(v)
         if year_match:
@@ -120,7 +122,7 @@ class Article(BaseModel):
     Abstract: Optional[Abstract]
 
     # validators
-    _textify_article_title = validator('ArticleTitle', allow_reuse=True)(get_element_text)
+    _textify_article_title = validator("ArticleTitle", allow_reuse=True)(get_element_text)
 
     @validator("Abstract")
     def merge_abstract_text(cls, v):
@@ -132,7 +134,7 @@ class MedlineCitation(BaseModel):
     Article: Article
 
     # validators
-    _textify_pmid = validator('PMID', allow_reuse=True)(get_element_text)
+    _textify_pmid = validator("PMID", allow_reuse=True)(get_element_text)
 
 
 class PubmedArticle(BaseModel):
@@ -148,15 +150,15 @@ class PubmedEfetchResponse(BaseModel):
 
 
 # -- NCBI EUTILS --
-def _safe_request(url: str, method: str = 'GET', headers={}, **opts):
+def _safe_request(url: str, method: str = "GET", headers={}, **opts):
     user_agent = f"{settings.app_name}/{settings.app_version} ({settings.app_url};mailto:{settings.admin_email})"
-    request_headers = {
-        "user-agent": user_agent
-    }
+    request_headers = {"user-agent": user_agent}
     request_headers.update(headers)
     try:
-        r = requests.request(method, url, headers=request_headers, timeout=settings.http_request_timeout, **opts)
-        r. raise_for_status()
+        r = requests.request(
+            method, url, headers=request_headers, timeout=settings.http_request_timeout, **opts
+        )
+        r.raise_for_status()
     except requests.exceptions.Timeout as e:
         print(f"Timeout error {e}")
         raise
@@ -178,7 +180,7 @@ def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
         "id": ",".join(id),
         "retstart": 0,
         "retmode": "xml",
-        "api_key": settings.ncbi_eutils_api_key
+        "api_key": settings.ncbi_eutils_api_key,
     }
     eutils_params.update(opts)
     if eutil == "esummary":
@@ -187,7 +189,7 @@ def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
         url = settings.eutils_efetch_url
     else:
         raise ValueError(f"Unsupported eutil '{eutil}''")
-    eutilResponse = _safe_request(url, 'POST', files=eutils_params)
+    eutilResponse = _safe_request(url, "POST", files=eutils_params)
     doc = xmltodict.parse(eutilResponse.text)
     return doc
 
@@ -201,10 +203,7 @@ def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
         title = pubmed_article.MedlineCitation.Article.ArticleTitle
         text = " ".join(_compact([title, abstract]))
         pmid = pubmed_article.MedlineCitation.PMID
-        docs.append({
-            "uid": pmid,
-            "text": text
-        })
+        docs.append({"uid": pmid, "text": text})
     return docs
 
 
@@ -220,7 +219,7 @@ def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
         upper = min([lower + MAX_EFETCH_RETMAX, num_uids])
         id = uids[lower:upper]
         try:
-            eutil_response = _get_eutil_records('efetch', id)
+            eutil_response = _get_eutil_records("efetch", id)
             ERROR = _get(eutil_response, ["eFetchResult", "ERROR"])
             if ERROR:
                 raise RuntimeError(ERROR)
