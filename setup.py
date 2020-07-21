@@ -8,19 +8,12 @@ setuptools.setup(
     version="0.1.0",
     author="John Giorgi",
     author_email="johnmgiorgi@gmail.com",
-    description=(
-        "A simple semantic search engine powered by HuggingFace's Transformers library."
-    ),
+    description=("A simple semantic search engine powered by HuggingFace's Transformers library."),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/PathwayCommons/semantic-search",
     packages=setuptools.find_packages(),
-    keywords=[
-        "natural language processing",
-        "pytorch",
-        "transformers",
-        "semantic search",
-    ],
+    keywords=["natural language processing", "pytorch", "transformers", "semantic search"],
     classifiers=[
         "Development Status :: 1 - Planning",
         "Environment :: Console",
@@ -40,7 +33,8 @@ setuptools.setup(
         "torch>=1.5.1",
         "transformers>=3.0.2",
         "typer>=0.3.0",
-        "python-dotenv>=0.14.0"
+        "python-dotenv>=0.14.0",
+        "xmltodict>0.12.0",
     ],
     extras_require={"dev": ["black", "flake8", "pytest"]},
 )
