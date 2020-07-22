@@ -1,11 +1,15 @@
 from operator import itemgetter
-from typing import Callable, Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple, Union
 
 import torch
 import typer
 from fastapi import FastAPI
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel, BaseSettings, validator
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+
+from semantic_search.ncbi import uids_to_docs
+
+UID = str
 
 # Emoji's used in typer.secho calls
 # See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
@@ -21,7 +25,7 @@ class Settings(BaseSettings):
     """Store global settings for the web-service. Pass these as environment variables at server
     startup. E.g.
 
-    `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn main:app`
+    `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app`
     """
 
     pretrained_model_name_or_path: str = "johngiorgi/declutr-small"
@@ -41,14 +45,29 @@ class Model(BaseModel):
 
 
 class Document(BaseModel):
-    uid: str
+    uid: UID
     text: str
 
 
 class Query(BaseModel):
-    query: Document
-    documents: List[Document] = []
+    query: Union[Document, UID]
+    documents: List[Union[Document, UID]] = []
     top_k: int = None
+
+    @validator("query")
+    def normalize_document(cls, v):
+        if isinstance(v, UID):
+            docs = uids_to_docs([v])
+            return Document(**docs[0])
+        else:
+            return v
+
+    @validator("documents")
+    def normalize_documents(cls, v):
+        if all(isinstance(x, UID) for x in v):
+            return [Document(**k) for k in uids_to_docs(v)]
+        else:
+            return v
 
 
 settings = Settings()
