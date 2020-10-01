@@ -9,6 +9,8 @@ from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTo
 
 from semantic_search.ncbi import uids_to_docs
 
+PRETRAINED_MODEL = "johngiorgi/declutr-small"
+
 UID = str
 
 # Emoji's used in typer.secho calls
@@ -28,7 +30,7 @@ class Settings(BaseSettings):
     `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app`
     """
 
-    pretrained_model_name_or_path: str = "johngiorgi/declutr-small"
+    pretrained_model_name_or_path: str = PRETRAINED_MODEL
     batch_size: int = 64
     max_length: Optional[int] = None
     mean_pool: bool = True
@@ -121,7 +123,10 @@ def _setup_model_and_tokenizer(
 
 @torch.no_grad()
 def _encode(
-    text: List[str], tokenizer: PreTrainedTokenizer, model: PreTrainedModel, mean_pool: bool = True,
+    text: List[str],
+    tokenizer: PreTrainedTokenizer,
+    model: PreTrainedModel,
+    mean_pool: bool = True,
 ) -> torch.Tensor:
 
     inputs = tokenizer(

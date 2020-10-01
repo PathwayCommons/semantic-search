@@ -35,8 +35,7 @@ settings = Settings()
 
 # -- Utilities --
 def _get(input: Dict, path: List, default=None) -> Any:
-    """Returns the value for the path, which specifies the key (index) of the next Dict (List)
-    """
+    """Returns the value for the path, which specifies the key (index) of the next Dict (List)"""
     internal_dict_value = input
     for k in path:
         if number_pattern.match(k):
@@ -49,8 +48,7 @@ def _get(input: Dict, path: List, default=None) -> Any:
 
 
 def _compact(input: List) -> List:
-    """Returns a list with None, False, and empty String removed
-    """
+    """Returns a list with None, False, and empty String removed"""
     return [x for x in input if x is not None and x is not False and x != ""]
 
 
@@ -173,8 +171,7 @@ def _safe_request(url: str, method: str = "GET", headers={}, **opts):
 
 
 def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
-    """Call one of the NCBI EUTILITIES and returns data as Python objects.
-    """
+    """Call one of the NCBI EUTILITIES and returns data as Python objects."""
     eutils_params = {
         "db": "pubmed",
         "id": ",".join(id),
@@ -195,8 +192,7 @@ def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
 
 
 def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
-    """Return a list Documents given a PubmedArticle
-    """
+    """Return a list Documents given a PubmedArticle"""
     docs = []
     for pubmed_article in articles:
         abstract = pubmed_article.MedlineCitation.Article.Abstract
@@ -209,8 +205,7 @@ def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
 
 # -- Public methods --
 def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
-    """Return uid, and text (i.e. title + abstract) given a PubMed uid
-    """
+    """Return uid, and text (i.e. title + abstract) given a PubMed uid"""
     docs = []
     num_uids = len(uids)
     num_queries = num_uids // MAX_EFETCH_RETMAX + 1
