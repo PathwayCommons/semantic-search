@@ -1,3 +1,5 @@
+![build](https://github.com/PathwayCommons/semantic-search/workflows/build/badge.svg)
+
 # Scientific Semantic Search
 
 A simple semantic search engine for scientific papers.
