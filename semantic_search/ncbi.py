@@ -100,15 +100,15 @@ def label_and_text_from_element(element: Union[str, dict]):
 
 
 class Abstract(BaseModel):
-    AbstractText: Union[str, dict, List[Union[dict, str]]]
+    AbstractText: Union[str, dict, List[Union[dict, str]], None]
 
     # Can be str, dict, or list of dict/str
     @validator("AbstractText")
     def combine_labels_and_texts(cls, v):
         update = ""
-        if isinstance(v, str) or isinstance(v, dict):
+        if v and (isinstance(v, str) or isinstance(v, dict)):
             update += label_and_text_from_element(v)
-        else:
+        elif v:
             for element in v:
                 if update:
                     update += " "
