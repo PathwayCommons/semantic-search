@@ -1,4 +1,5 @@
 ![build](https://github.com/PathwayCommons/semantic-search/workflows/build/badge.svg)
+[![codecov](https://codecov.io/gh/PathwayCommons/semantic-search/branch/master/graph/badge.svg)](https://codecov.io/gh/PathwayCommons/semantic-search)
 
 # Scientific Semantic Search
 
