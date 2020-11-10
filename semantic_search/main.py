@@ -9,7 +9,7 @@ from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTo
 
 from semantic_search.ncbi import uids_to_docs
 
-PRETRAINED_MODEL = "johngiorgi/declutr-small"
+PRETRAINED_MODEL = "johngiorgi/declutr-sci-base"
 
 UID = str
 
