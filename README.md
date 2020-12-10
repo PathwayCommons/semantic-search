@@ -99,9 +99,9 @@ Once the server is running, you can make a POST request with:
 
     ```json
     {
-        "query": "9887103",
-        "documents":["9887103", "30049242", "22936248"],
-        "top_k":3
+        "query": {"uid": "9887103"},
+        "documents": [{"uid": "9887103"}, {"uid": "30049242"}, {"uid": "22936248"}],
+        "top_k": 3
     }
     ```
 
