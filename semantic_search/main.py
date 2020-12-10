@@ -154,7 +154,7 @@ def encode(text: List[str]) -> torch.Tensor:
     # would lead to an even larger speedup.
     # https://stackoverflow.com/questions/8372399/zip-with-list-output-instead-of-tuple
     sorted_indices, text = cast(
-        Tuple[Tuple[int], Tuple[str]], zip(*sorted(enumerate(text), key=itemgetter(1)))
+        Tuple[Tuple[int], List[str]], zip(*sorted(enumerate(text), key=itemgetter(1)))
     )  # tell mypy explicitly the types of items in the unpacked tuple
     unsorted_indices, _ = zip(*sorted(enumerate(sorted_indices), key=itemgetter(1)))
 
