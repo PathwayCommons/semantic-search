@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Tuple, cast
 
 import torch
 import typer
@@ -40,7 +40,7 @@ class Settings(BaseSettings):
 class Model(BaseModel):
     tokenizer: PreTrainedModel = None
     model: PreTrainedTokenizer = None
-    similarity: Callable[[torch.Tensor, torch.Tensor], torch.Tensor] = None
+    similarity: Callable[..., torch.Tensor] = None  # type: ignore
 
     class Config:
         arbitrary_types_allowed = True
@@ -52,24 +52,22 @@ class Document(BaseModel):
 
 
 class Query(BaseModel):
-    query: Union[Document, UID]
-    documents: List[Union[Document, UID]] = []
-    top_k: int = None
+    query: Document
+    documents: List[Document] = []
+    top_k: Optional[int] = None
 
-    @validator("query")
-    def normalize_document(cls, v):
-        if isinstance(v, UID):
-            docs = uids_to_docs([v])
-            return Document(**docs[0])
-        else:
-            return v
+    @validator("query", "documents", pre=True)
+    def normalize_document(cls, v, field):
+        if field.name == "query":
+            v = [v]
 
-    @validator("documents")
-    def normalize_documents(cls, v):
-        if all(isinstance(x, UID) for x in v):
-            return [Document(**k) for k in uids_to_docs(v)]
-        else:
-            return v
+        normalized_docs = []
+        for doc in v:
+            if isinstance(doc, UID):
+                normalized_docs.append(Document(**uids_to_docs([doc])[0]))
+            else:
+                normalized_docs.append(doc)
+        return normalized_docs[0] if field.name == "query" else normalized_docs
 
 
 settings = Settings()
@@ -132,17 +130,17 @@ def _encode(
     inputs = tokenizer(
         text, padding=True, truncation=True, max_length=settings.max_length, return_tensors="pt"
     )
-
     for name, tensor in inputs.items():
         inputs[name] = tensor.to(model.device)
-    sequence_output, _ = model(**inputs, output_hidden_states=False)
+    attention_mask = inputs["attention_mask"]
+    output = model(**inputs).last_hidden_state
 
     if mean_pool:
-        embedding = torch.sum(
-            sequence_output * inputs["attention_mask"].unsqueeze(-1), dim=1
-        ) / torch.clamp(torch.sum(inputs["attention_mask"], dim=1, keepdims=True), min=1e-9)
+        embedding = torch.sum(output * attention_mask.unsqueeze(-1), dim=1) / torch.clamp(
+            torch.sum(attention_mask, dim=1, keepdims=True), min=1e-9
+        )
     else:
-        embedding = sequence_output[:, 0, :]
+        embedding = output[:, 0, :]
 
     return embedding
 
@@ -154,13 +152,16 @@ def encode(text: List[str]) -> torch.Tensor:
     # tokenization, it is only a proxy of the true lengths of the inputs to the model.
     # In the future, it would be better to sort by length *after* tokenization which
     # would lead to an even larger speedup.
-    sorted_indices, text = zip(*sorted(enumerate(text), key=itemgetter(1)))
+    # https://stackoverflow.com/questions/8372399/zip-with-list-output-instead-of-tuple
+    sorted_indices, text = cast(
+        Tuple[Tuple[int], Tuple[str]], zip(*sorted(enumerate(text), key=itemgetter(1)))
+    )  # tell mypy explicitly the types of items in the unpacked tuple
     unsorted_indices, _ = zip(*sorted(enumerate(sorted_indices), key=itemgetter(1)))
 
-    embeddings = []
+    embeddings: torch.Tensor = []
     for i in range(0, len(text), settings.batch_size):
         embedding = _encode(
-            text[i : i + settings.batch_size],
+            list(text[i : i + settings.batch_size]),
             tokenizer=model.tokenizer,
             model=model.model,
             mean_pool=settings.mean_pool,
@@ -186,10 +187,10 @@ def app_startup():
 
 @app.post("/")
 async def query(query: Query) -> List[Dict[str, float]]:
-    text = [query.query.text] + [document.text for document in query.documents]
     ids = [query.query.uid] + [document.uid for document in query.documents]
-    embeddings = encode(text)
+    text = [query.query.text] + [document.text for document in query.documents]
 
+    embeddings = encode(text)
     similarity_scores = model.similarity(embeddings[0], embeddings[1:])
 
     # If top_k not specified, return all documents.

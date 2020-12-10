@@ -1,7 +1,7 @@
 import os
 import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Optional, Union, Collection
 
 import requests
 import xmltodict
@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     app_url = os.getenv("APP_URL")
     admin_email = os.getenv("ADMIN_EMAIL")
     ncbi_eutils_api_key = os.getenv("NCBI_EUTILS_API_KEY")
-    eutils_base_url = os.getenv("EUTILS_BASE_URL")
-    eutils_efetch_url = eutils_base_url + os.getenv("EUTILS_EFETCH_BASENAME")
+    eutils_base_url: str = os.getenv("EUTILS_BASE_URL")
+    eutils_efetch_url: str = eutils_base_url + os.getenv("EUTILS_EFETCH_BASENAME")
     eutils_esummary_url = eutils_base_url + os.getenv("EUTILS_ESUMMARY_BASENAME")
     http_request_timeout = int(os.getenv("HTTP_REQUEST_TIMEOUT"))
 
@@ -191,7 +191,7 @@ def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
     return doc
 
 
-def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
+def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, Collection[Any]]]:
     """Return a list Documents given a PubmedArticle"""
     docs = []
     for pubmed_article in articles:
@@ -204,9 +204,9 @@ def _articles_to_docs(articles: List[PubmedArticle]) -> List[Dict[str, str]]:
 
 
 # -- Public methods --
-def uids_to_docs(uids: List[str]) -> List[Dict[str, str]]:
+def uids_to_docs(uids: List[str]) -> List[Dict[str, Collection[Any]]]:
     """Return uid, and text (i.e. title + abstract) given a PubMed uid"""
-    docs = []
+    docs: List[Dict[str, Collection[Any]]] = []
     num_uids = len(uids)
     num_queries = num_uids // MAX_EFETCH_RETMAX + 1
     for i in range(num_queries):
