@@ -27,7 +27,7 @@ setuptools.setup(
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
         "Typing :: Typed",
     ],
-    python_requires=">=3.6.1",
+    python_requires=">=3.7.0",
     install_requires=[
         "fastapi>=0.62.0",
         "uvicorn>=0.13.0",
