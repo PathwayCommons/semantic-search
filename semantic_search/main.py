@@ -11,6 +11,8 @@ from semantic_search.ncbi import uids_to_docs
 
 PRETRAINED_MODEL = "johngiorgi/declutr-sci-base"
 
+UID = str
+
 # Emoji's used in typer.secho calls
 # See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
 SUCCESS = "\U00002705"
@@ -45,8 +47,8 @@ class Model(BaseModel):
 
 
 class Document(BaseModel):
-    uid: str
-    text: str = None
+    uid: UID
+    text: str
 
 
 class Query(BaseModel):
@@ -54,17 +56,15 @@ class Query(BaseModel):
     documents: List[Document] = []
     top_k: Optional[int] = None
 
-    @validator("query", "documents")
+    @validator("query", "documents", pre=True)
     def normalize_document(cls, v, field):
         if field.name == "query":
             v = [v]
 
         normalized_docs = []
         for doc in v:
-            if doc.uid is None and doc.text is None:
-                raise ValueError(f'Got None for both the "uid" and "text" in {field}.')
-            if doc.text is None:
-                normalized_docs.append(Document(**uids_to_docs([doc.uid])[0]))
+            if isinstance(doc, UID):
+                normalized_docs.append(Document(**uids_to_docs([doc])[0]))
             else:
                 normalized_docs.append(doc)
         return normalized_docs[0] if field.name == "query" else normalized_docs
