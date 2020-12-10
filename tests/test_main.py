@@ -1,14 +1,14 @@
 import numpy as np
 from semantic_search import main
 from semantic_search.main import app_startup, encode
-from transformers import PreTrainedModel, PreTrainedTokenizer
+from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
 
 
 class TestMain:
     app_startup()
 
     def test_setup_model_and_tokenizer(self) -> None:
-        assert isinstance(main.model.tokenizer, PreTrainedTokenizer)
+        assert isinstance(main.model.tokenizer, (PreTrainedTokenizer, PreTrainedTokenizerFast))
         assert isinstance(main.model.model, PreTrainedModel)
 
     def test_encode(self, inputs):
