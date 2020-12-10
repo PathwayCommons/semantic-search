@@ -45,7 +45,7 @@ class Model(BaseModel):
 
 
 class Document(BaseModel):
-    uid: str = None
+    uid: str
     text: str = None
 
 
