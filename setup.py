@@ -37,5 +37,7 @@ setuptools.setup(
         "python-dotenv>=0.15.0",
         "xmltodict>=0.12.0",
     ],
-    extras_require={"dev": ["black", "coverage", "codecov", "flake8", "pytest", "pytest-cov"]},
+    extras_require={
+        "dev": ["black", "coverage", "codecov", "flake8", "pytest", "pytest-cov", "mypy"]
+    },
 )
