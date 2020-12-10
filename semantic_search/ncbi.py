@@ -19,15 +19,15 @@ number_pattern = re.compile(r"^[0-9]+$")
 
 
 class Settings(BaseSettings):
-    app_name = os.getenv("APP_NAME")
-    app_version = os.getenv("APP_VERSION")
-    app_url = os.getenv("APP_URL")
-    admin_email = os.getenv("ADMIN_EMAIL")
-    ncbi_eutils_api_key = os.getenv("NCBI_EUTILS_API_KEY")
-    eutils_base_url: str = os.getenv("EUTILS_BASE_URL")
-    eutils_efetch_url: str = eutils_base_url + os.getenv("EUTILS_EFETCH_BASENAME")
-    eutils_esummary_url = eutils_base_url + os.getenv("EUTILS_ESUMMARY_BASENAME")
-    http_request_timeout = int(os.getenv("HTTP_REQUEST_TIMEOUT"))
+    app_name: str = os.getenv("APP_NAME", "")
+    app_version: str = os.getenv("APP_VERSION", "")
+    app_url: str = os.getenv("APP_URL", "")
+    admin_email: str = os.getenv("ADMIN_EMAIL", "")
+    ncbi_eutils_api_key: str = os.getenv("NCBI_EUTILS_API_KEY", "")
+    eutils_base_url: str = os.getenv("EUTILS_BASE_URL", "")
+    eutils_efetch_url: str = eutils_base_url + os.getenv("EUTILS_EFETCH_BASENAME", "")
+    eutils_esummary_url: str = eutils_base_url + os.getenv("EUTILS_ESUMMARY_BASENAME", "")
+    http_request_timeout: int = int(os.getenv("HTTP_REQUEST_TIMEOUT", -1))
 
 
 settings = Settings()
