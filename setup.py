@@ -32,7 +32,7 @@ setuptools.setup(
         "fastapi>=0.62.0",
         "uvicorn>=0.13.0",
         "torch>=1.7.0",
-        "transformers>=4.0.1,<4.3.0",
+        "transformers>=4.0.1,<4.4.0",
         "typer>=0.3.2",
         "python-dotenv>=0.15.0",
         "xmltodict>=0.12.0",
