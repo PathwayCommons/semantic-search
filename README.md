@@ -16,17 +16,18 @@ Before installing, you should create and activate a Python virtual environment. 
 
 ### Installing the library and dependencies
 
-First, clone the repository locally:
+If you _don't_ plan on modifying the source code, install from `git` using `pip`
 
-```bash
-git clone https://github.com/BaderLab/semantic-search.git
-cd semantic-search
+```
+pip install git+https://github.com/PathwayCommons/semantic-search.git
 ```
 
-Then, install
+Otherwise, clone the repository locally and then install
 
 ```bash
-pip install -e .
+git clone https://github.com/PathwayCommons/semantic-search.git
+cd semantic-search
+pip install --editable .
 ```
 
 Finally, if you would like to take advantage of a CUDA-enabled GPU, you must also install [PyTorch](https://pytorch.org/) with [CUDA](https://developer.nvidia.com/cuda-zone) support by following the instructions for your system [here](https://pytorch.org/get-started/locally/).
