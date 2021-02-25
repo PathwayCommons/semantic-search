@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="John Giorgi",
     author_email="johnmgiorgi@gmail.com",
-    description=("A simple semantic search engine powered by HuggingFace's Transformers library."),
+    description=("A simple semantic search engine for scientific papers."),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/PathwayCommons/semantic-search",

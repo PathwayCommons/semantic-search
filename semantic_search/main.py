@@ -11,7 +11,7 @@ from semantic_search import __version__
 
 app = FastAPI(
     title="Scientific Semantic Search",
-    description="A simple semantic search engine powered by HuggingFace's Transformers library.",
+    description="A simple semantic search engine for scientific papers.",
     version=__version__,
 )
 
