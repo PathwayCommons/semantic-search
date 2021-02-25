@@ -7,8 +7,13 @@ from pydantic import BaseSettings
 
 from semantic_search.common.util import encode_with_transformer, setup_model_and_tokenizer
 from semantic_search.schemas import Model, Query
+from semantic_search import __version__
 
-app = FastAPI()
+app = FastAPI(
+    title="Scientific Semantic Search",
+    description="A simple semantic search engine powered by HuggingFace's Transformers library.",
+    version=__version__,
+)
 
 
 class Settings(BaseSettings):
