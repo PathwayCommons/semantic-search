@@ -1,26 +1,19 @@
 from operator import itemgetter
-from typing import Callable, Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, cast
 
 import torch
-import typer
 from fastapi import FastAPI
-from pydantic import BaseModel, BaseSettings, validator
-from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+from pydantic import BaseSettings
 
-from semantic_search.ncbi import uids_to_docs
+from semantic_search.common.util import encode_with_transformer, setup_model_and_tokenizer
+from semantic_search.schemas import Model, Query
+from semantic_search import __version__
 
-PRETRAINED_MODEL = "johngiorgi/declutr-sci-base"
-
-UID = str
-
-# Emoji's used in typer.secho calls
-# See: https://github.com/carpedm20/emoji/blob/master/emoji/unicode_codes.py
-SUCCESS = "\U00002705"
-WARNING = "\U000026A0"
-FAST = "\U0001F3C3"
-
-
-app = FastAPI()
+app = FastAPI(
+    title="Scientific Semantic Search",
+    description="A simple semantic search engine for scientific papers.",
+    version=__version__,
+)
 
 
 class Settings(BaseSettings):
@@ -30,119 +23,15 @@ class Settings(BaseSettings):
     `CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app`
     """
 
-    pretrained_model_name_or_path: str = PRETRAINED_MODEL
+    pretrained_model_name_or_path: str = "johngiorgi/declutr-sci-base"
     batch_size: int = 64
     max_length: Optional[int] = None
     mean_pool: bool = True
     cuda_device: int = -1
 
 
-class Model(BaseModel):
-    tokenizer: PreTrainedModel = None
-    model: PreTrainedTokenizer = None
-    similarity: Callable[..., torch.Tensor] = None  # type: ignore
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
-class Document(BaseModel):
-    uid: UID
-    text: str
-
-
-class Query(BaseModel):
-    query: Document
-    documents: List[Document] = []
-    top_k: Optional[int] = None
-
-    @validator("query", "documents", pre=True)
-    def normalize_document(cls, v, field):
-        if field.name == "query":
-            v = [v]
-
-        normalized_docs = []
-        for doc in v:
-            if isinstance(doc, UID):
-                normalized_docs.append(Document(**uids_to_docs([doc])[0]))
-            else:
-                normalized_docs.append(doc)
-        return normalized_docs[0] if field.name == "query" else normalized_docs
-
-
 settings = Settings()
 model = Model()
-
-
-def _get_device(cuda_device):
-    """Return a `torch.cuda` device if `torch.cuda.is_available()` and `cuda_device>=0`.
-    Otherwise returns a `torch.cpu` device.
-    """
-    if cuda_device != -1 and torch.cuda.is_available():
-        device = torch.device("cuda")
-        typer.secho(
-            f"{FAST} Using CUDA device {torch.cuda.get_device_name()} with index {torch.cuda.current_device()}.",
-            fg=typer.colors.GREEN,
-            bold=True,
-        )
-    else:
-        device = torch.device("cpu")
-        typer.secho(
-            f"{WARNING} Using CPU. Note that this will be many times slower than a GPU.",
-            fg=typer.colors.YELLOW,
-            bold=True,
-        )
-    return device
-
-
-def _setup_model_and_tokenizer(
-    pretrained_model_name_or_path: str, cuda_device: int = -1
-) -> Tuple[PreTrainedTokenizer, PreTrainedModel]:
-    device = _get_device(cuda_device)
-    # Load the Transformers tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
-    typer.secho(
-        f'{SUCCESS} Tokenizer "{pretrained_model_name_or_path}" from Transformers loaded successfully.',
-        fg=typer.colors.GREEN,
-        bold=True,
-    )
-    # Load the Transformers model
-    model = AutoModel.from_pretrained(pretrained_model_name_or_path)
-    model = model.to(device)
-    model.eval()
-    typer.secho(
-        f'{SUCCESS} Model "{pretrained_model_name_or_path}" from Transformers loaded successfully.',
-        fg=typer.colors.GREEN,
-        bold=True,
-    )
-
-    return tokenizer, model
-
-
-@torch.no_grad()
-def _encode(
-    text: List[str],
-    tokenizer: PreTrainedTokenizer,
-    model: PreTrainedModel,
-    mean_pool: bool = True,
-) -> torch.Tensor:
-
-    inputs = tokenizer(
-        text, padding=True, truncation=True, max_length=settings.max_length, return_tensors="pt"
-    )
-    for name, tensor in inputs.items():
-        inputs[name] = tensor.to(model.device)
-    attention_mask = inputs["attention_mask"]
-    output = model(**inputs).last_hidden_state
-
-    if mean_pool:
-        embedding = torch.sum(output * attention_mask.unsqueeze(-1), dim=1) / torch.clamp(
-            torch.sum(attention_mask, dim=1, keepdims=True), min=1e-9
-        )
-    else:
-        embedding = output[:, 0, :]
-
-    return embedding
 
 
 def encode(text: List[str]) -> torch.Tensor:
@@ -160,7 +49,7 @@ def encode(text: List[str]) -> torch.Tensor:
 
     embeddings: torch.Tensor = []
     for i in range(0, len(text), settings.batch_size):
-        embedding = _encode(
+        embedding = encode_with_transformer(
             list(text[i : i + settings.batch_size]),
             tokenizer=model.tokenizer,
             model=model.model,
@@ -179,7 +68,7 @@ def encode(text: List[str]) -> torch.Tensor:
 @app.on_event("startup")
 def app_startup():
 
-    model.tokenizer, model.model = _setup_model_and_tokenizer(
+    model.tokenizer, model.model = setup_model_and_tokenizer(
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
     model.similarity = torch.nn.CosineSimilarity(-1)
