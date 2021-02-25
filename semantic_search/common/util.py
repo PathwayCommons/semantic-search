@@ -21,7 +21,7 @@ def get_device(cuda_device: int = -1) -> torch.device:
     if cuda_device != -1 and torch.cuda.is_available():
         device = torch.device("cuda")
         typer.secho(
-            f"{Emoji.FAST} Using CUDA device {torch.cuda.get_device_name()} with index"
+            f"{Emoji.FAST.value} Using CUDA device {torch.cuda.get_device_name()} with index"
             f" {torch.cuda.current_device()}.",
             fg=typer.colors.GREEN,
             bold=True,
@@ -29,7 +29,7 @@ def get_device(cuda_device: int = -1) -> torch.device:
     else:
         device = torch.device("cpu")
         typer.secho(
-            f"{Emoji.WARNING} Using CPU. Note that this will be many times slower than a GPU.",
+            f"{Emoji.WARNING.value} Using CPU. Note that this will be many times slower than a GPU.",
             fg=typer.colors.YELLOW,
             bold=True,
         )
@@ -47,8 +47,8 @@ def setup_model_and_tokenizer(
     tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
     typer.secho(
         (
-            f'{Emoji.SUCCESS} Tokenizer "{pretrained_model_name_or_path}" from Transformers loaded'
-            " successfully."
+            f'{Emoji.SUCCESS.value} Tokenizer "{pretrained_model_name_or_path}" from Transformers'
+            " loaded successfully."
         ),
         fg=typer.colors.GREEN,
         bold=True,
@@ -59,8 +59,8 @@ def setup_model_and_tokenizer(
     model.eval()
     typer.secho(
         (
-            f'{Emoji.SUCCESS} Model "{pretrained_model_name_or_path}" from Transformers loaded'
-            " successfully."
+            f'{Emoji.SUCCESS.value} Model "{pretrained_model_name_or_path}" from Transformers'
+            " loaded successfully."
         ),
         fg=typer.colors.GREEN,
         bold=True,
