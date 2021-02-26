@@ -1,10 +1,11 @@
 from enum import Enum
-from typing import Tuple, List, Optional
+from typing import List, Optional, Tuple
 
+import faiss
+import numpy as np
 import torch
 import typer
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
-import faiss
 
 
 class Emoji(Enum):
@@ -102,3 +103,19 @@ def setup_faiss_index(vector_dim: int) -> faiss.Index:
     index = faiss.IndexPreTransform(faiss.NormalizationTransform(vector_dim), index)
     index = faiss.IndexIDMap(index)
     return index
+
+
+def add_to_faiss_index(ids, vectors, index) -> None:
+    ids_to_index = []
+    embeddings_to_index = []
+    index_id_map = faiss.vector_to_array(index.id_map)
+    for doc_id, doc_embedding in zip(ids, vectors):
+        # Only add items to the index if they do not already exist.
+        # See: https://github.com/facebookresearch/faiss/issues/859
+        if doc_id not in index_id_map:
+            ids_to_index.append(doc_id)
+            embeddings_to_index.append(doc_embedding)
+    if ids_to_index and embeddings_to_index:
+        ids_to_index = np.asarray(ids_to_index).astype("int64")
+        embeddings_to_index = np.vstack(embeddings_to_index).astype("float32")
+        index.add_with_ids(embeddings_to_index, ids_to_index)

@@ -35,7 +35,7 @@ class TestMain:
 
             # Check that the returned UIDs and scores are as expected
             expected_uids = [
-                item["uid"] if isinstance(item, dict) else item
+                int(item["uid"]) if isinstance(item, dict) else int(item)
                 for item in json.loads(request)["documents"]
             ]
             actual_uids = [item["uid"] for item in response.json()]
