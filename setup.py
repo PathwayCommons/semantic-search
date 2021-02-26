@@ -30,6 +30,7 @@ setuptools.setup(
     python_requires=">=3.7.0",
     install_requires=[
         "fastapi>=0.63.0",
+        "faiss>=1.5.3",
         "uvicorn>=0.13.4",
         "torch>=1.7.1",
         "transformers>=4.3.3",

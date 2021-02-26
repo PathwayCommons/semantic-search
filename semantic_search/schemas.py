@@ -1,6 +1,6 @@
-from typing import Callable, List, Optional
+from typing import List, Optional
 
-import torch
+import faiss
 from pydantic import BaseModel, validator
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
@@ -14,7 +14,7 @@ UID = str
 class Model(BaseModel):
     tokenizer: PreTrainedModel = None
     model: PreTrainedTokenizer = None
-    similarity: Callable[..., torch.Tensor] = None  # type: ignore
+    index: faiss.Index = None
 
     class Config:
         arbitrary_types_allowed = True

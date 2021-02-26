@@ -4,6 +4,7 @@ from typing import Tuple, List, Optional
 import torch
 import typer
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+import faiss
 
 
 class Emoji(Enum):
@@ -94,3 +95,10 @@ def encode_with_transformer(
         embedding = output[:, 0, :]
 
     return embedding
+
+
+def setup_faiss_index(vector_dim: int) -> faiss.Index:
+    index = faiss.IndexFlatIP(vector_dim)
+    index = faiss.IndexPreTransform(faiss.NormalizationTransform(vector_dim), index)
+    index = faiss.IndexIDMap(index)
+    return index
