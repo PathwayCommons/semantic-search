@@ -9,11 +9,9 @@ from fastapi import FastAPI
 from pydantic import BaseSettings
 
 from semantic_search import __version__
-from semantic_search.common.util import (
-    encode_with_transformer,
-    setup_faiss_index,
-    setup_model_and_tokenizer,
-)
+from semantic_search.common.util import (encode_with_transformer,
+                                         setup_faiss_index,
+                                         setup_model_and_tokenizer)
 from semantic_search.schemas import Model, Query
 
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
@@ -90,38 +88,23 @@ async def query(query: Query) -> List[Dict[str, float]]:
 
     embeddings = encode(text)
 
-    query_id, query_embedding = query.query.uid, embeddings[0]
-    document_ids, document_embeddings = [doc.uid for doc in query.documents], embeddings[1:]
-
-    query_embedding = np.asarray(query_embedding).reshape(1, -1).astype("float32")
-    document_embeddings = (
-        np.asarray(document_embeddings).reshape(-1, model.index.d).astype("float32")
-    )
-
-    query_id = (
-        np.asarray(query_id)
-        .reshape(
-            -1,
-        )
-        .astype("int64")
-    )
-    document_ids = (
-        np.asarray(document_ids)
-        .reshape(
-            -1,
-        )
-        .astype("int64")
-    )
+    # query_id = query.query.uid
+    query_embedding = embeddings[0].unsqueeze(0).cpu().numpy()
+    document_ids = [doc.uid for doc in query.documents]
+    document_embeddings = embeddings[1:].cpu().numpy()
 
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
+    ids_to_index = []
+    embeddings_to_index = []
+    index_id_map = faiss.vector_to_array(model.index.id_map)
     for doc_id, doc_embedding in zip(document_ids, document_embeddings):
-        if doc_id not in faiss.vector_to_array(model.index.id_map):
-            doc_embedding = doc_embedding.reshape(1, -1)
-            doc_id = doc_id.reshape(  # type: ignore
-                1,
-            )
-            model.index.add_with_ids(doc_embedding, doc_id)
+        if doc_id not in index_id_map:
+            ids_to_index.append(doc_id)
+            embeddings_to_index.append(doc_embedding)
+    ids_to_index = np.asarray(ids_to_index).astype("int64")
+    embeddings_to_index = np.vstack(embeddings_to_index).astype("float32")
+    model.index.add_with_ids(embeddings_to_index, ids_to_index)
 
     # Ensure that the query is not in the index when we search.
     # https://github.com/facebookresearch/faiss/wiki/Special-operations-on-indexes#removing-elements-from-an-index
