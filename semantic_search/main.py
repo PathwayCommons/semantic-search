@@ -1,7 +1,8 @@
 import os
 from operator import itemgetter
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, Union, cast
 
+import faiss
 import torch
 from fastapi import FastAPI
 from pydantic import BaseSettings
@@ -15,6 +16,7 @@ from semantic_search.common.util import (
 )
 from semantic_search.schemas import Model, Query
 
+# https://github.com/dmlc/xgboost/issues/1715#issuecomment-420305786
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 app = FastAPI(
@@ -42,7 +44,9 @@ settings = Settings()
 model = Model()
 
 
-def encode(text: List[str]) -> torch.Tensor:
+def encode(text: Union[str, List[str]]) -> torch.Tensor:
+    if isinstance(text, str):
+        text = [text]
     # Sort the inputs by length, maintaining the original indices so we can un-sort
     # before returning the embeddings. This speeds up embedding by minimizing the
     # amount of computation performed on pads. Because this sorting happens before
@@ -85,26 +89,31 @@ def app_startup():
 
 @app.post("/")
 async def query(query: Query) -> List[Dict[str, float]]:
-    text = [query.query.text] + [document.text for document in query.documents]
+    ids = [int(doc.uid) for doc in query.documents]
+    texts = [document.text for document in query.documents]
 
-    embeddings = encode(text)
-
-    # query_id = query.query.uid
-    query_embedding = embeddings[0].unsqueeze(0).cpu().numpy()
-    document_ids = [int(doc.uid) for doc in query.documents]
-    document_embeddings = embeddings[1:].cpu().numpy()
-
-    add_to_faiss_index(document_ids, document_embeddings, model.index)
-
-    # Ensure that the query is not in the index when we search.
-    # https://github.com/facebookresearch/faiss/wiki/Special-operations-on-indexes#removing-elements-from-an-index
+    # # Ensure that the query is not in the index when we search.
+    # query_id = np.asarray(int(query.query.uid)).reshape(
+    #     1,
+    # )
     # model.index.remove_ids(query_id)
 
-    if query.top_k is not None:
-        top_k = max(min(query.top_k, len(query.documents)), 0)
-    top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
+    # Only add items to the index if they do not already exist.
+    # See: https://github.com/facebookresearch/faiss/issues/859
+    # To do this, we first determine which of the incoming ids do not exist in the index
+    indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
+    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
+    # We then embed the corresponding text and update the index
+    if to_embed:
+        ids, texts = zip(*to_embed)  # type: ignore
+        embeddings = encode(texts).cpu().numpy()
+        add_to_faiss_index(ids, embeddings, model.index)
 
-    # model.index.add_with_ids(query_embedding, query_id)
+    top_k = max(min(query.top_k, len(query.documents)), 0) if query.top_k else None
+
+    # Embed the query and perform the search
+    query_embedding = encode(query.query.text).cpu().numpy()
+    top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()

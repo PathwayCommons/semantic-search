@@ -98,24 +98,18 @@ def encode_with_transformer(
     return embedding
 
 
-def setup_faiss_index(vector_dim: int) -> faiss.Index:
-    index = faiss.IndexFlatIP(vector_dim)
-    index = faiss.IndexPreTransform(faiss.NormalizationTransform(vector_dim), index)
+def setup_faiss_index(embedding_dim: int) -> faiss.Index:
+    """Returns a simple `IndexFlatIP` FAISS index with a vector dimension size of `embedding_dim`
+    and an ID map for cosine similarity searching.
+    """
+    index = faiss.IndexFlatIP(embedding_dim)
+    index = faiss.IndexPreTransform(faiss.NormalizationTransform(embedding_dim), index)
     index = faiss.IndexIDMap(index)
     return index
 
 
-def add_to_faiss_index(ids, vectors, index) -> None:
-    ids_to_index = []
-    embeddings_to_index = []
-    index_id_map = faiss.vector_to_array(index.id_map)
-    for doc_id, doc_embedding in zip(ids, vectors):
-        # Only add items to the index if they do not already exist.
-        # See: https://github.com/facebookresearch/faiss/issues/859
-        if doc_id not in index_id_map:
-            ids_to_index.append(doc_id)
-            embeddings_to_index.append(doc_embedding)
-    if ids_to_index and embeddings_to_index:
-        ids_to_index = np.asarray(ids_to_index).astype("int64")
-        embeddings_to_index = np.vstack(embeddings_to_index).astype("float32")
-        index.add_with_ids(embeddings_to_index, ids_to_index)
+def add_to_faiss_index(ids: List[int], embeddings: np.ndarray, index: faiss.Index) -> None:
+    """Adds the vectors `embeddings` to the `index` using the keys `ids`."""
+    ids = np.asarray(ids).astype("int64")
+    embeddings = embeddings.astype("float32")
+    index.add_with_ids(embeddings, ids)
