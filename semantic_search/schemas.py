@@ -1,6 +1,6 @@
-from typing import Callable, List, Optional
+from typing import List
 
-import torch
+import faiss
 from pydantic import BaseModel, validator
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
@@ -14,7 +14,7 @@ UID = str
 class Model(BaseModel):
     tokenizer: PreTrainedModel = None
     model: PreTrainedTokenizer = None
-    similarity: Callable[..., torch.Tensor] = None  # type: ignore
+    index: faiss.Index = None
 
     class Config:
         arbitrary_types_allowed = True
@@ -28,7 +28,7 @@ class Document(BaseModel):
 class Query(BaseModel):
     query: Document
     documents: List[Document] = []
-    top_k: Optional[int] = None
+    top_k: int = 10
 
     @validator("query", "documents", pre=True)
     def normalize_document(cls, v, field):
@@ -42,3 +42,9 @@ class Query(BaseModel):
             else:
                 normalized_docs.append(doc)
         return normalized_docs[0] if field.name == "query" else normalized_docs
+
+    @validator("top_k")
+    def top_k_must_be_gt_zero(cls, v):
+        if not v > 0:
+            raise ValueError(f"top_k must be greater than 0, got {v}")
+        return v

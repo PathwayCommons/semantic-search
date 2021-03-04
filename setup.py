@@ -30,6 +30,7 @@ setuptools.setup(
     python_requires=">=3.7.0",
     install_requires=[
         "fastapi>=0.63.0",
+        "faiss-cpu>=1.7.0",
         "uvicorn>=0.13.4",
         "torch>=1.7.1",
         "transformers>=4.3.3",
@@ -38,6 +39,15 @@ setuptools.setup(
         "xmltodict>=0.12.0",
     ],
     extras_require={
-        "dev": ["black", "coverage", "codecov", "flake8", "pytest", "pytest-cov", "mypy"]
+        "dev": [
+            "black",
+            "coverage",
+            "codecov",
+            "flake8",
+            "pytest",
+            "pytest-cov",
+            "hypothesis",
+            "mypy",
+        ]
     },
 )

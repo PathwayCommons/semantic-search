@@ -1,13 +1,19 @@
 from operator import itemgetter
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Optional, Tuple, Union, cast
 
+import faiss
 import torch
 from fastapi import FastAPI
 from pydantic import BaseSettings
 
-from semantic_search.common.util import encode_with_transformer, setup_model_and_tokenizer
-from semantic_search.schemas import Model, Query
 from semantic_search import __version__
+from semantic_search.common.util import (
+    add_to_faiss_index,
+    encode_with_transformer,
+    setup_faiss_index,
+    setup_model_and_tokenizer,
+)
+from semantic_search.schemas import Model, Query
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -34,7 +40,9 @@ settings = Settings()
 model = Model()
 
 
-def encode(text: List[str]) -> torch.Tensor:
+def encode(text: Union[str, List[str]]) -> torch.Tensor:
+    if isinstance(text, str):
+        text = [text]
     # Sort the inputs by length, maintaining the original indices so we can un-sort
     # before returning the embeddings. This speeds up embedding by minimizing the
     # amount of computation performed on pads. Because this sorting happens before
@@ -71,24 +79,40 @@ def app_startup():
     model.tokenizer, model.model = setup_model_and_tokenizer(
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
-    model.similarity = torch.nn.CosineSimilarity(-1)
+    embedding_dim = model.model.config.hidden_size
+    model.index = setup_faiss_index(embedding_dim)
 
 
 @app.post("/")
 async def query(query: Query) -> List[Dict[str, float]]:
-    ids = [query.query.uid] + [document.uid for document in query.documents]
-    text = [query.query.text] + [document.text for document in query.documents]
+    ids = [int(doc.uid) for doc in query.documents]
+    texts = [document.text for document in query.documents]
 
-    embeddings = encode(text)
-    similarity_scores = model.similarity(embeddings[0], embeddings[1:])
+    # # Ensure that the query is not in the index when we search.
+    # query_id = np.asarray(int(query.query.uid)).reshape(
+    #     1,
+    # )
+    # model.index.remove_ids(query_id)
 
-    # If top_k not specified, return all documents.
-    top_k = similarity_scores.size(0)
-    if query.top_k is not None:
-        top_k = max(min(query.top_k, len(query.documents)), 0)
-    top_k_scores, top_k_indicies = torch.topk(similarity_scores, top_k)
-    top_k_scores = top_k_scores.tolist()
-    # Offset the indices by 1 to account for the query
-    top_k_indicies = [idx.item() + 1 for idx in top_k_indicies]
+    # Only add items to the index if they do not already exist.
+    # See: https://github.com/facebookresearch/faiss/issues/859
+    # To do this, we first determine which of the incoming ids do not exist in the index
+    indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
+    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
+    # We then embed the corresponding text and update the index
+    if to_embed:
+        ids, texts = zip(*to_embed)  # type: ignore
+        embeddings = encode(texts).cpu().numpy()
+        add_to_faiss_index(ids, embeddings, model.index)
 
-    return [{"uid": ids[idx], "score": top_k_scores[num]} for num, idx in enumerate(top_k_indicies)]
+    # Can't search for more items than exist in the index
+    top_k = min(model.index.ntotal, query.top_k)
+
+    # Embed the query and perform the search
+    query_embedding = encode(query.query.text).cpu().numpy()
+    top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
+
+    top_k_indicies = top_k_indicies.reshape(-1).tolist()
+    top_k_scores = top_k_scores.reshape(-1).tolist()
+
+    return [{"uid": uid, "score": score} for uid, score in zip(top_k_indicies, top_k_scores)]

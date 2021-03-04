@@ -1,6 +1,8 @@
 from enum import Enum
-from typing import Tuple, List, Optional
+from typing import List, Optional, Tuple
 
+import faiss
+import numpy as np
 import torch
 import typer
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
@@ -94,3 +96,20 @@ def encode_with_transformer(
         embedding = output[:, 0, :]
 
     return embedding
+
+
+def setup_faiss_index(embedding_dim: int) -> faiss.Index:
+    """Returns a simple `IndexFlatIP` FAISS index with a vector dimension size of `embedding_dim`
+    and an ID map for cosine similarity searching.
+    """
+    index = faiss.IndexFlatIP(embedding_dim)
+    index = faiss.IndexPreTransform(faiss.NormalizationTransform(embedding_dim), index)
+    index = faiss.IndexIDMap(index)
+    return index
+
+
+def add_to_faiss_index(ids: List[int], embeddings: np.ndarray, index: faiss.Index) -> None:
+    """Adds the vectors `embeddings` to the `index` using the keys `ids`."""
+    ids = np.asarray(ids).astype("int64")
+    embeddings = embeddings.astype("float32")
+    index.add_with_ids(embeddings, ids)

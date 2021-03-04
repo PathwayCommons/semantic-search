@@ -1,7 +1,9 @@
 import json
 
+import hypothesis.strategies as st
 import numpy as np
 from fastapi.testclient import TestClient
+from hypothesis import given, settings
 from semantic_search import main
 from semantic_search.main import app, app_startup, encode
 from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
@@ -35,7 +37,7 @@ class TestMain:
 
             # Check that the returned UIDs and scores are as expected
             expected_uids = [
-                item["uid"] if isinstance(item, dict) else item
+                int(item["uid"]) if isinstance(item, dict) else int(item)
                 for item in json.loads(request)["documents"]
             ]
             actual_uids = [item["uid"] for item in response.json()]
@@ -43,3 +45,17 @@ class TestMain:
             assert len(expected_uids) == len(actual_uids)
             assert set(actual_uids) == set(expected_uids)
             assert all(0 <= score <= 1 for score in actual_scores)
+
+    @settings(deadline=None)
+    @given(bad_top_k=st.integers(max_value=0))
+    def test_top_k_gt_zero(self, dummy_request_with_text: str, bad_top_k: int) -> None:
+        # TODO: We can change this back to just using the dummy_requests fixture
+        # once we solve the issue that causes requests with IDs to keep fetching the text
+        # even if the ids have been indexed.
+        dummy_requests = [dummy_request_with_text]
+        for request in dummy_requests:
+            request = json.loads(request)
+            request["top_k"] = bad_top_k  # type: ignore
+            request = json.dumps(request)
+            response = client.post("/", request)
+            assert response.status_code == 422

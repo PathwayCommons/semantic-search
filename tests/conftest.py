@@ -15,7 +15,7 @@ def inputs() -> List[str]:
     ]
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def dummy_request_with_text() -> str:
     request = {
         "query": {
@@ -41,7 +41,7 @@ def dummy_request_with_text() -> str:
     return json.dumps(request)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def dummy_request_with_uids() -> str:
     request = {
         "query": "9887103",
@@ -51,6 +51,6 @@ def dummy_request_with_uids() -> str:
     return json.dumps(request)
 
 
-@pytest.fixture()
+@pytest.fixture(scope="module")
 def dummy_requests(dummy_request_with_text, dummy_request_with_uids) -> List[str]:
     return [dummy_request_with_text, dummy_request_with_uids]
