@@ -39,6 +39,15 @@ setuptools.setup(
         "xmltodict>=0.12.0",
     ],
     extras_require={
-        "dev": ["black", "coverage", "codecov", "flake8", "pytest", "pytest-cov", "mypy"]
+        "dev": [
+            "black",
+            "coverage",
+            "codecov",
+            "flake8",
+            "pytest",
+            "pytest-cov",
+            "hypothesis",
+            "mypy",
+        ]
     },
 )
