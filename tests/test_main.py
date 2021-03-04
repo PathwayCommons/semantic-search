@@ -55,7 +55,7 @@ class TestMain:
         dummy_requests = [dummy_request_with_text]
         for request in dummy_requests:
             request = json.loads(request)
-            request["top_k"] = bad_top_k
+            request["top_k"] = bad_top_k  # type: ignore
             request = json.dumps(request)
             response = client.post("/", request)
             assert response.status_code == 422
