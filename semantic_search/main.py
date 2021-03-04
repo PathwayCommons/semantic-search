@@ -1,4 +1,3 @@
-import os
 from operator import itemgetter
 from typing import Dict, List, Optional, Tuple, Union, cast
 
@@ -15,9 +14,6 @@ from semantic_search.common.util import (
     setup_model_and_tokenizer,
 )
 from semantic_search.schemas import Model, Query
-
-# https://github.com/dmlc/xgboost/issues/1715#issuecomment-420305786
-os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -109,7 +105,8 @@ async def query(query: Query) -> List[Dict[str, float]]:
         embeddings = encode(texts).cpu().numpy()
         add_to_faiss_index(ids, embeddings, model.index)
 
-    top_k = max(min(query.top_k, len(query.documents)), 0) if query.top_k else None
+    # Can't search for more items than exist in the index
+    top_k = min(model.index.ntotal, query.top_k)
 
     # Embed the query and perform the search
     query_embedding = encode(query.query.text).cpu().numpy()
