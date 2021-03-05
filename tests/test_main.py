@@ -42,8 +42,9 @@ class TestMain:
             ]
             actual_uids = [item["uid"] for item in response.json()]
             actual_scores = [item["score"] for item in response.json()]
+            del expected_uids[0]
             assert len(expected_uids) == len(actual_uids)
-            assert set(actual_uids) == set(expected_uids)
+            assert set(actual_uids)  == set(expected_uids)
             assert all(0 <= score <= 1 for score in actual_scores)
 
     @settings(deadline=None)
