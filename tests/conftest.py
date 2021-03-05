@@ -38,7 +38,9 @@ def dummy_request_with_text() -> str:
         ],
         "top_k": 3,
     }
-    return json.dumps(request)
+    # We don't actually test scores, so use a dummy value of -1
+    response = [{"uid": 30049242, "score": -1}, {"uid": 22936248, "score": -1}]
+    return json.dumps(request), response
 
 
 @pytest.fixture(scope="module")
@@ -48,7 +50,9 @@ def dummy_request_with_uids() -> str:
         "documents": ["9887103", "30049242", "22936248"],
         "top_k": 3,
     }
-    return json.dumps(request)
+    # We don't actually test scores, so use a dummy value of -1
+    response = [{"uid": 30049242, "score": -1}, {"uid": 22936248, "score": -1}]
+    return json.dumps(request), response
 
 
 @pytest.fixture(scope="module")

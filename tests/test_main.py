@@ -30,21 +30,17 @@ class TestMain:
 
     def test_query(self, dummy_requests: str) -> None:
         # dummy_requests fixutre returns list of all possible request types
-        for request in dummy_requests:
+        for request, expected_response in dummy_requests:
             # Check that we can make a POST request with properly formatted payload
-            response = client.post("/", request)
-            assert response.status_code == 200
+            actual_response = client.post("/", request)
+            assert actual_response.status_code == 200
 
             # Check that the returned UIDs and scores are as expected
-            expected_uids = [
-                int(item["uid"]) if isinstance(item, dict) else int(item)
-                for item in json.loads(request)["documents"]
-            ]
-            actual_uids = [item["uid"] for item in response.json()]
-            actual_scores = [item["score"] for item in response.json()]
-            del expected_uids[0]
+            expected_uids = [item["uid"] for item in expected_response]
+            actual_uids = [item["uid"] for item in actual_response.json()]
+            actual_scores = [item["score"] for item in actual_response.json()]
             assert len(expected_uids) == len(actual_uids)
-            assert set(actual_uids)  == set(expected_uids)
+            assert set(actual_uids) == set(expected_uids)
             assert all(0 <= score <= 1 for score in actual_scores)
 
     @settings(deadline=None)
@@ -54,7 +50,7 @@ class TestMain:
         # once we solve the issue that causes requests with IDs to keep fetching the text
         # even if the ids have been indexed.
         dummy_requests = [dummy_request_with_text]
-        for request in dummy_requests:
+        for request, _ in dummy_requests:
             request = json.loads(request)
             request["top_k"] = bad_top_k  # type: ignore
             request = json.dumps(request)
