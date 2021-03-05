@@ -106,7 +106,7 @@ async def query(query: Query) -> List[Dict[str, float]]:
         add_to_faiss_index(ids, embeddings, model.index)
 
     # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, query.top_k) + 1
+    top_k = min(model.index.ntotal, query.top_k + 1)
 
     # Embed the query and perform the search
     query_embedding = encode(query.query.text).cpu().numpy()
@@ -117,8 +117,10 @@ async def query(query: Query) -> List[Dict[str, float]]:
 
     if int(query.query.uid) in (top_k_indicies):
         index = top_k_indicies.index(int(query.query.uid))
-        del top_k_indicies[index], top_k_scores[index]
+        del top_k_indicies[index] 
+        del top_k_scores[index]
     else:
-        del top_k_indicies[-1], top_k_scores[-1]
+        del top_k_indicies[-1]
+        del top_k_scores[-1]
 
     return [{"uid": uid, "score": score} for uid, score in zip(top_k_indicies, top_k_scores)]
