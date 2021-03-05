@@ -1,5 +1,5 @@
 import json
-from typing import List
+from typing import Any, Dict, List, Tuple
 
 import pytest
 
@@ -16,7 +16,7 @@ def inputs() -> List[str]:
 
 
 @pytest.fixture(scope="module")
-def dummy_request_with_text() -> str:
+def dummy_request_with_text() -> Tuple[str, Dict[str, Any]]:
     request = {
         "query": {
             "uid": "9887103",
@@ -44,7 +44,7 @@ def dummy_request_with_text() -> str:
 
 
 @pytest.fixture(scope="module")
-def dummy_request_with_uids() -> str:
+def dummy_request_with_uids() -> Tuple[str, Dict[str, Any]]:
     request = {
         "query": "9887103",
         "documents": ["9887103", "30049242", "22936248"],
