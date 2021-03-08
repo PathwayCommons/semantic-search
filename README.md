@@ -73,24 +73,20 @@ Once the server is running, you can make a POST request with:
                 "text": "High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression. Many eukaryotic genes possess multiple alternative promoters with distinct expression specificities..."
             }
         ],
-        "top_k":3
+        "top_k":2
     }
     ```
 
-    The return value is a JSON representation of the `top_k` most similar documents (default: return all):
+    The return value is a JSON representation of the `top_k` most similar documents (default: return all, except the query itself):
 
     ```json
     [
         {
-            "uid": "9887103",
-            "score": 1.0
-        },
-        {
-            "uid": "30049242",
+            "uid": 30049242,
             "score": 0.6427373886108398
         },
         {
-            "uid": "22936248",
+            "uid": 22936248,
             "score": 0.49102723598480225
         }
     ]
@@ -104,7 +100,7 @@ Once the server is running, you can make a POST request with:
     {
         "query": "9887103",
         "documents": ["9887103", "30049242", "22936248"],
-        "top_k": 3
+        "top_k": 2
     }
     ```
 
