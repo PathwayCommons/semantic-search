@@ -1,4 +1,5 @@
 import json
+from typing import Dict, List, Tuple
 
 import hypothesis.strategies as st
 import numpy as np
@@ -9,6 +10,8 @@ from semantic_search.main import app, app_startup, encode
 from transformers import PreTrainedModel, PreTrainedTokenizer, PreTrainedTokenizerFast
 
 client = TestClient(app)
+
+Request = Tuple[str, List[Dict[str, int]]]
 
 
 class TestMain:
@@ -28,15 +31,15 @@ class TestMain:
         assert isinstance(main.model.tokenizer, (PreTrainedTokenizer, PreTrainedTokenizerFast))
         assert isinstance(main.model.model, PreTrainedModel)
 
-    def test_query(self, dummy_requests: str) -> None:
+    def test_query(self, dummy_requests: Request) -> None:
         # dummy_requests fixutre returns list of all possible request types
-        for request, expected_response in dummy_requests:
+        for request, expected_response in dummy_requests:  # type: ignore
             # Check that we can make a POST request with properly formatted payload
-            actual_response = client.post("/", request)
+            actual_response = client.post("/", request)  # type: ignore
             assert actual_response.status_code == 200
 
             # Check that the returned UIDs and scores are as expected
-            expected_uids = [item["uid"] for item in expected_response]
+            expected_uids = [item["uid"] for item in expected_response]  # type: ignore
             actual_uids = [item["uid"] for item in actual_response.json()]
             actual_scores = [item["score"] for item in actual_response.json()]
             assert len(expected_uids) == len(actual_uids)
@@ -45,7 +48,7 @@ class TestMain:
 
     @settings(deadline=None)
     @given(bad_top_k=st.integers(max_value=0))
-    def test_top_k_gt_zero(self, dummy_request_with_text: str, bad_top_k: int) -> None:
+    def test_top_k_gt_zero(self, dummy_request_with_text: Request, bad_top_k: int) -> None:
         # TODO: We can change this back to just using the dummy_requests fixture
         # once we solve the issue that causes requests with IDs to keep fetching the text
         # even if the ids have been indexed.
