@@ -2,6 +2,7 @@ from operator import itemgetter
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import faiss
+from faiss.swigfaiss import read_index
 import torch
 from fastapi import FastAPI
 from pydantic import BaseSettings
@@ -32,6 +33,7 @@ class Settings(BaseSettings):
     pretrained_model_name_or_path: str = "johngiorgi/declutr-sci-base"
     batch_size: int = 64
     max_length: Optional[int] = None
+    file_path: Optional[str] = None
     mean_pool: bool = True
     cuda_device: int = -1
 
@@ -80,7 +82,10 @@ def app_startup():
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
     embedding_dim = model.model.config.hidden_size
-    model.index = setup_faiss_index(embedding_dim)
+    if settings.file_path != None:
+        model.index = read_index(settings.file_path)
+    else:
+        model.index = setup_faiss_index(embedding_dim)
 
 
 @app.post("/")
