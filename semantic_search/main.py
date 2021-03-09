@@ -115,7 +115,7 @@ async def query(query: Query) -> List[Dict[str, float]]:
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
 
-    if int(query.query.uid) in (top_k_indicies):
+    if int(query.query.uid) in top_k_indicies:
         index = top_k_indicies.index(int(query.query.uid))
         del top_k_indicies[index], top_k_scores[index]
     else:
