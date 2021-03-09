@@ -1,7 +1,9 @@
 import json
-from typing import List
+from typing import Dict, List, Tuple
 
 import pytest
+
+Request = Tuple[str, List[Dict[str, int]]]
 
 
 @pytest.fixture(scope="module")
@@ -16,7 +18,7 @@ def inputs() -> List[str]:
 
 
 @pytest.fixture(scope="module")
-def dummy_request_with_text() -> str:
+def dummy_request_with_text() -> Request:
     request = {
         "query": {
             "uid": "9887103",
@@ -38,17 +40,21 @@ def dummy_request_with_text() -> str:
         ],
         "top_k": 3,
     }
-    return json.dumps(request)
+    # We don't actually test scores, so use a dummy value of -1
+    response = [{"uid": 30049242, "score": -1}, {"uid": 22936248, "score": -1}]
+    return json.dumps(request), response
 
 
 @pytest.fixture(scope="module")
-def dummy_request_with_uids() -> str:
+def dummy_request_with_uids() -> Request:
     request = {
         "query": "9887103",
         "documents": ["9887103", "30049242", "22936248"],
         "top_k": 3,
     }
-    return json.dumps(request)
+    # We don't actually test scores, so use a dummy value of -1
+    response = [{"uid": 30049242, "score": -1}, {"uid": 22936248, "score": -1}]
+    return json.dumps(request), response
 
 
 @pytest.fixture(scope="module")
