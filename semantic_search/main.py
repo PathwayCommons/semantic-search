@@ -82,7 +82,7 @@ def app_startup():
         settings.pretrained_model_name_or_path, cuda_device=settings.cuda_device
     )
     embedding_dim = model.model.config.hidden_size
-    if settings.file_path is not None:
+    if settings.serialized_index_path is not None:
         model.index = read_index(settings.file_path)
     else:
         model.index = setup_faiss_index(embedding_dim)
