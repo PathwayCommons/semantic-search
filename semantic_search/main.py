@@ -83,7 +83,7 @@ def app_startup():
     )
     embedding_dim = model.model.config.hidden_size
     if settings.serialized_index_path is not None:
-        model.index = read_index(settings.file_path)
+        model.index = faiss.swigfaiss.read_index(settings.file_path)
     else:
         model.index = setup_faiss_index(embedding_dim)
 
