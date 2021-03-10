@@ -2,7 +2,6 @@ from operator import itemgetter
 from typing import Dict, List, Optional, Tuple, Union, cast
 
 import faiss
-from faiss.swigfaiss import read_index
 import torch
 from fastapi import FastAPI
 from pydantic import BaseSettings
