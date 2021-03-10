@@ -30,9 +30,9 @@ class Settings(BaseSettings):
     """
 
     pretrained_model_name_or_path: str = "johngiorgi/declutr-sci-base"
+    serialized_index_path: Optional[str] = None
     batch_size: int = 64
     max_length: Optional[int] = None
-    serialized_index_path: Optional[str] = None
     mean_pool: bool = True
     cuda_device: int = -1
 
