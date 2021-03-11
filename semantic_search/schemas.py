@@ -11,15 +11,6 @@ UID = str
 # See: https://fastapi.tiangolo.com/tutorial/body/ for more details on creating a Request Body.
 
 
-class Model(BaseModel):
-    tokenizer: PreTrainedModel = None
-    model: PreTrainedTokenizer = None
-    index: faiss.Index = None
-
-    class Config:
-        arbitrary_types_allowed = True
-
-
 class Document(BaseModel):
     uid: UID
     text: str
@@ -48,3 +39,17 @@ class Query(BaseModel):
         if not v > 0:
             raise ValueError(f"top_k must be greater than 0, got {v}")
         return v
+
+
+class Model(BaseModel):
+    tokenizer: PreTrainedModel = None
+    model: PreTrainedTokenizer = None
+    index: faiss.Index = None
+
+    class Config:
+        arbitrary_types_allowed = True
+
+
+class Response(BaseModel):
+    uid: UID
+    score: float
