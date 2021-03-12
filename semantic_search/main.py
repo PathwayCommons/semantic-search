@@ -1,5 +1,5 @@
 from operator import itemgetter
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union, cast
 
 import faiss
 import torch
@@ -13,7 +13,7 @@ from semantic_search.common.util import (
     setup_faiss_index,
     setup_model_and_tokenizer,
 )
-from semantic_search.schemas import Model, Query
+from semantic_search.schemas import Model, Query, Response
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -83,8 +83,8 @@ def app_startup():
     model.index = setup_faiss_index(embedding_dim)
 
 
-@app.post("/")
-async def query(query: Query) -> List[Dict[str, float]]:
+@app.post("/", response_model=List[Response])
+async def query(query: Query):
     ids = [int(doc.uid) for doc in query.documents]
     texts = [document.text for document in query.documents]
 
@@ -121,4 +121,5 @@ async def query(query: Query) -> List[Dict[str, float]]:
     else:
         del top_k_indicies[-1], top_k_scores[-1]
 
-    return [{"uid": uid, "score": score} for uid, score in zip(top_k_indicies, top_k_scores)]
+    response = [Response(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
+    return response
