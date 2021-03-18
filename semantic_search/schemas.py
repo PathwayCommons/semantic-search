@@ -29,7 +29,10 @@ class Query(BaseModel):
         normalized_docs = []
         for doc in v:
             if isinstance(doc, UID):
-                normalized_docs.append(Document(**uids_to_docs([doc])[0]))
+                # uids_to_docs expects a list of strings and yields a list of dictionaries. We
+                # convert the generator to a list, and then index its first element, and then
+                # unpack the dictionary and pass its contents as keyword arguments to Document.
+                normalized_docs.append(Document(**list(uids_to_docs([doc]))[0][0]))
             else:
                 normalized_docs.append(doc)
         return normalized_docs[0] if field.name == "query" else normalized_docs

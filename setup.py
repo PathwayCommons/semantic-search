@@ -29,6 +29,7 @@ setuptools.setup(
     ],
     python_requires=">=3.7.0",
     install_requires=[
+        "biopython>=1.78",
         "fastapi>=0.63.0",
         "faiss-cpu>=1.7.0",
         "uvicorn>=0.13.4",
