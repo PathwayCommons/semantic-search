@@ -1,7 +1,7 @@
 from typing import List
 
 import faiss
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, Field
 from transformers import PreTrainedModel, PreTrainedTokenizer
 
 from semantic_search.ncbi import uids_to_docs
@@ -19,7 +19,7 @@ class Document(BaseModel):
 class Query(BaseModel):
     query: Document
     documents: List[Document] = []
-    top_k: int = 10
+    top_k: int = Field(10, gt=0, description="top_k must be greater than 0")
 
     @validator("query", "documents", pre=True)
     def normalize_document(cls, v, field):
@@ -36,12 +36,6 @@ class Query(BaseModel):
             else:
                 normalized_docs.append(doc)
         return normalized_docs[0] if field.name == "query" else normalized_docs
-
-    @validator("top_k")
-    def top_k_must_be_gt_zero(cls, v):
-        if not v > 0:
-            raise ValueError(f"top_k must be greater than 0, got {v}")
-        return v
 
 
 class Model(BaseModel):
