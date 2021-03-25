@@ -49,64 +49,48 @@ To provide arguments to the server, pass them as environment variables, e.g.:
 CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app
 ```
 
-Once the server is running, you can make a POST request with:
+Once the server is running, you can make a POST request with `JSON` body. E.g.
 
-1. JSON body that is self-contained. Provide the text in `query` and text in `documents` to search against. Sample JSON request:
-
-    ```json
-    {
-        "query": {
-            "uid":"9887103",
+```json
+{
+    "query": {
+        "uid":"9887103",
+        "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
+    },
+    "documents":[
+        {
+            "uid": "9887103",
             "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
         },
-        "documents":[
-            {
-                "uid": "9887103",
-                "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
-            },
-            {
-                "uid": "30049242",
-                "text": "Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection. The common fruit fly Drosophila melanogaster is an exceptional model for dissecting innate immunity..."
-            },
-            {
-                "uid": "22936248",
-                "text": "High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression. Many eukaryotic genes possess multiple alternative promoters with distinct expression specificities..."
-            }
-        ],
-        "top_k":2
-    }
-    ```
-
-    The return value is a JSON representation of the `top_k` most similar documents (default: return all, except the query itself):
-
-    ```json
-    [
         {
-            "uid": 30049242,
-            "score": 0.6427373886108398
+            "uid": "30049242",
+            "text": "Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection. The common fruit fly Drosophila melanogaster is an exceptional model for dissecting innate immunity..."
         },
         {
-            "uid": 22936248,
-            "score": 0.49102723598480225
+            "uid": "22936248",
+            "text": "High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression. Many eukaryotic genes possess multiple alternative promoters with distinct expression specificities..."
         }
-    ]
-    ```
+    ],
+    "top_k":2
+}
+```
 
-    - NB: In this case, each `uid` in `documents` should be unique, but otherwise have no meaning.
+The return value is a JSON representation of the `top_k` most similar documents (defaults to 10):
 
-2. JSON body that references PubMed article uids. Sample JSON request:
-
-    ```json
+```json
+[
     {
-        "query": "9887103",
-        "documents": ["9887103", "30049242", "22936248"],
-        "top_k": 2
+        "uid": 30049242,
+        "score": 0.6427373886108398
+    },
+    {
+        "uid": 22936248,
+        "score": 0.49102723598480225
     }
-    ```
+]
+```
 
-    - Notes:
-      - For each Document element, the text consists of the `ArticleTitle` appended to `Abstract` for that PubMed article. See [pubmed DTD](https://dtd.nlm.nih.gov/ncbi/pubmed/doc/out/180101/index.html)
-      - JSON body may consist of either objects (as in Case 1) or PMID strings for `query` and elements of `documents`. However, the elements of `documents` must either be all be a single type.
+If `"text"` is not provided, we assume `"uid"`s are valid PMIDs and fetch the title and abstract text before embedding, indexing and searching.
 
 ### Running via Docker
 
