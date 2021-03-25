@@ -30,17 +30,21 @@ class TestMain:
         assert isinstance(main.model.tokenizer, (PreTrainedTokenizer, PreTrainedTokenizerFast))
         assert isinstance(main.model.model, PreTrainedModel)
 
-    def test_query(self, dummy_requests: Request) -> None:
-        # dummy_requests fixutre returns list of all possible request types
-        for request, expected_response in dummy_requests:  # type: ignore
-            # Check that we can make a POST request with properly formatted payload
-            actual_response = client.post("/", request)  # type: ignore
-            assert actual_response.status_code == 200
+    def test_index(self) -> None:
+        response = client.get("/")
+        assert response.status_code == 200
+        assert response.json()["message"] == "OK"
 
-            # Check that the returned UIDs and scores are as expected
-            expected_uids = [item["uid"] for item in expected_response]  # type: ignore
-            actual_uids = [item["uid"] for item in actual_response.json()]
-            actual_scores = [item["score"] for item in actual_response.json()]
-            assert len(expected_uids) == len(actual_uids)
-            assert set(actual_uids) == set(expected_uids)
-            assert all(0 <= score <= 1 for score in actual_scores)
+    def test_search_with_text(self, dummy_request_with_test: Request) -> None:
+        request, expected_response = dummy_request_with_test
+        # Check that we can make a POST request with properly formatted payload
+        actual_response = client.post("/search", request)
+        assert actual_response.status_code == 200
+
+        # Check that the returned UIDs and scores are as expected
+        expected_uids = [item["uid"] for item in expected_response]  # type: ignore
+        actual_uids = [item["uid"] for item in actual_response.json()]
+        actual_scores = [item["score"] for item in actual_response.json()]
+        assert len(expected_uids) == len(actual_uids)
+        assert set(actual_uids) == set(expected_uids)
+        assert all(0 <= score <= 1 for score in actual_scores)
