@@ -1,7 +1,7 @@
 import io
 import os
 from pathlib import Path
-from typing import Any, Collection, Dict, List
+from typing import Any, Dict, List, Generator
 import logging
 import json
 import time
@@ -73,7 +73,7 @@ def _parse_medline(text: str) -> List[dict]:
     return medline_records
 
 
-def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
+def _get_eutil_records(eutil: str, id: List[str], **opts) -> List[Dict[Any, Any]]:
     """Call one of the NCBI EUTILITIES and returns data as Python objects."""
     eutils_params = {
         "db": "pubmed",
@@ -93,7 +93,7 @@ def _get_eutil_records(eutil: str, id: List[str], **opts) -> dict:
     return _parse_medline(eutilResponse.text)
 
 
-def _medline_to_docs(records: List[Dict[str, str]]) -> List[Dict[str, Collection[Any]]]:
+def _medline_to_docs(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
     """Return a list Documents given a list of Medline records
     See https://www.nlm.nih.gov/bsd/mms/medlineelements.html
     """
@@ -111,7 +111,7 @@ def _medline_to_docs(records: List[Dict[str, str]]) -> List[Dict[str, Collection
 
 
 # -- Public methods --
-def uids_to_docs(uids: List[str]) -> List[Dict[str, Collection[Any]]]:
+def uids_to_docs(uids: List[str]) -> Generator[List[Dict[str, str]], None, None]:
     """Return uid, and text (i.e. title + abstract) given a PubMed uid"""
     num_uids = len(uids)
     num_queries = num_uids // MAX_EFETCH_RETMAX + 1
