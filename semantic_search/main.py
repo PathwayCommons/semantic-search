@@ -85,14 +85,13 @@ def app_startup():
 
 @app.post("/", response_model=List[Response])
 async def query(query: Query):
+    """Returns the `search.top_k` most similar documents to the query (`search.query`) from the
+    provided list of documents (`search.documents`) and the index (`model.index`). Note that the
+    effective `top_k` might be less than requested depending on the number of unique items in
+    `search.documents` and `model.index`.
+    """
     ids = [int(doc.uid) for doc in query.documents]
     texts = [document.text for document in query.documents]
-
-    # # Ensure that the query is not in the index when we search.
-    # query_id = np.asarray(int(query.query.uid)).reshape(
-    #     1,
-    # )
-    # model.index.remove_ids(query_id)
 
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
@@ -106,20 +105,16 @@ async def query(query: Query):
         add_to_faiss_index(ids, embeddings, model.index)
 
     # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, query.top_k + 1)
-
+    top_k = min(model.index.ntotal, query.top_k)
     # Embed the query and perform the search
     query_embedding = encode(query.query.text).cpu().numpy()
     top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
-
     if int(query.query.uid) in top_k_indicies:
         index = top_k_indicies.index(int(query.query.uid))
         del top_k_indicies[index], top_k_scores[index]
-    else:
-        del top_k_indicies[-1], top_k_scores[-1]
 
     response = [Response(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
     return response

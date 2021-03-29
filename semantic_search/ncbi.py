@@ -21,7 +21,6 @@ def _compact(input: List) -> List:
 
 # -- Setup and initialization --
 MAX_EFETCH_RETMAX = 10000
-MAX_LIST_RETMAX = 100000
 dot_env_filepath = Path(__file__).absolute().parent.parent / ".env"
 load_dotenv(dot_env_filepath)
 
