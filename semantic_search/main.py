@@ -12,6 +12,7 @@ from semantic_search.common.util import (
     encode_with_transformer,
     setup_faiss_index,
     setup_model_and_tokenizer,
+    normalize_documents,
 )
 from semantic_search.schemas import Model, Query, Response
 
@@ -85,6 +86,7 @@ def app_startup():
 
 @app.post("/", response_model=List[Response])
 async def query(query: Query):
+
     ids = [int(doc.uid) for doc in query.documents]
     texts = [document.text for document in query.documents]
 
@@ -97,8 +99,23 @@ async def query(query: Query):
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
     # To do this, we first determine which of the incoming ids do not exist in the index
+
+    if query.query.text is None:
+        query.query.text = normalize_documents([query.query.uid])
+
+    for i, (id_, text) in enumerate(zip(ids, texts)):
+        if text is None:
+            texts[i] = normalize_documents([str(id_)])
+
     indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
     to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
+    # for i, (id_, text) in enumerate(zip(ids,texts)):
+    #   if text is None:
+    #      texts[i] = util.???
+
+    # for ids not in faiss (to_embed), do:
+    # User didnt provide text: go and fetch it, otherwise do nothing
+    # Embed the text
     # We then embed the corresponding text and update the index
     if to_embed:
         ids, texts = zip(*to_embed)  # type: ignore
@@ -106,20 +123,16 @@ async def query(query: Query):
         add_to_faiss_index(ids, embeddings, model.index)
 
     # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, query.top_k + 1)
-
+    top_k = min(model.index.ntotal, query.top_k)
     # Embed the query and perform the search
     query_embedding = encode(query.query.text).cpu().numpy()
     top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
-
     if int(query.query.uid) in top_k_indicies:
         index = top_k_indicies.index(int(query.query.uid))
         del top_k_indicies[index], top_k_scores[index]
-    else:
-        del top_k_indicies[-1], top_k_scores[-1]
 
     response = [Response(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
     return response
