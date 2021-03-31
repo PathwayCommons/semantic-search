@@ -12,6 +12,7 @@ from semantic_search.common.util import (
     encode_with_transformer,
     setup_faiss_index,
     setup_model_and_tokenizer,
+    normalize_documents,
 )
 from semantic_search.schemas import Model, Query, Response
 
@@ -97,8 +98,16 @@ async def query(query: Query):
     # See: https://github.com/facebookresearch/faiss/issues/859
     # To do this, we first determine which of the incoming ids do not exist in the index
     indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
-    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
+
+    if query.query.text is None and query.query.uid not in indexed_ids:
+        query.query.text = normalize_documents([query.query.uid])
+
+    for i, (id_, text) in enumerate(zip(ids, texts)):
+        if text is None and id_ not in indexed_ids:
+            texts[i] = normalize_documents([str(id_)])
+
     # We then embed the corresponding text and update the index
+    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
     if to_embed:
         ids, texts = zip(*to_embed)  # type: ignore
         embeddings = encode(texts).cpu().numpy()
