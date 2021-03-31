@@ -99,24 +99,17 @@ async def query(query: Query):
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
     # To do this, we first determine which of the incoming ids do not exist in the index
+    indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
 
-    if query.query.text is None:
+    if query.query.text is None and query.query.id not in indexed_ids:
         query.query.text = normalize_documents([query.query.uid])
 
     for i, (id_, text) in enumerate(zip(ids, texts)):
-        if text is None:
+        if text is None and id_ not in indexed_ids:
             texts[i] = normalize_documents([str(id_)])
 
-    indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
-    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
-    # for i, (id_, text) in enumerate(zip(ids,texts)):
-    #   if text is None:
-    #      texts[i] = util.???
-
-    # for ids not in faiss (to_embed), do:
-    # User didnt provide text: go and fetch it, otherwise do nothing
-    # Embed the text
     # We then embed the corresponding text and update the index
+    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
     if to_embed:
         ids, texts = zip(*to_embed)  # type: ignore
         embeddings = encode(texts).cpu().numpy()
