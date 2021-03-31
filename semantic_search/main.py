@@ -86,13 +86,11 @@ def app_startup():
 
 @app.post("/", response_model=List[Response])
 async def query(query: Query):
-
     """Returns the `search.top_k` most similar documents to the query (`search.query`) from the
     provided list of documents (`search.documents`) and the index (`model.index`). Note that the
     effective `top_k` might be less than requested depending on the number of unique items in
     `search.documents` and `model.index`.
     """
-
     ids = [int(doc.uid) for doc in query.documents]
     texts = [document.text for document in query.documents]
 
