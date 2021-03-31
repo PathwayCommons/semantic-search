@@ -99,7 +99,7 @@ async def query(query: Query):
     # To do this, we first determine which of the incoming ids do not exist in the index
     indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
 
-    if query.query.text is None and query.query.id not in indexed_ids:
+    if query.query.text is None and query.query.uid not in indexed_ids:
         query.query.text = normalize_documents([query.query.uid])
 
     for i, (id_, text) in enumerate(zip(ids, texts)):
