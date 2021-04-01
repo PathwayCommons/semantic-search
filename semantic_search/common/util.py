@@ -123,4 +123,4 @@ def normalize_documents(pmids: List[str]) -> str:
     normalized_docs = []
     for doc in pmids:
         normalized_docs.append(Document(**list(uids_to_docs([doc]))[0][0]))
-    return normalized_docs[0].text
+    return normalized_docs[0].text  # type: ignore
