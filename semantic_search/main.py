@@ -1,9 +1,11 @@
+from datetime import datetime
+from http import HTTPStatus
 from operator import itemgetter
 from typing import List, Optional, Tuple, Union, cast
 
 import faiss
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseSettings
 
 from semantic_search import __version__
@@ -14,7 +16,7 @@ from semantic_search.common.util import (
     setup_model_and_tokenizer,
     normalize_documents,
 )
-from semantic_search.schemas import Model, Query, Response
+from semantic_search.schemas import Model, Search, TopMatch
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -84,23 +86,34 @@ def app_startup():
     model.index = setup_faiss_index(embedding_dim)
 
 
-@app.post("/", response_model=List[Response])
-async def query(query: Query):
-    """Returns the `search.top_k` most similar documents to the query (`search.query`) from the
-    provided list of documents (`search.documents`) and the index (`model.index`). Note that the
-    effective `top_k` might be less than requested depending on the number of unique items in
-    `search.documents` and `model.index`.
+@app.get("/", tags=["General"])
+def index(request: Request):
+    """Health check."""
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "method": request.method,
+        "status-code": HTTPStatus.OK,
+        "timestamp": datetime.now().isoformat(),
+        "url": request.url._url,
+    }
+    return response
+
+
+@app.post("/search", tags=["Search"], response_model=List[TopMatch])
+async def search(search: Search):
+    """Returns the `top_k` most similar documents to `query` from the provided list of `documents`
+    and the index.
     """
-    ids = [int(doc.uid) for doc in query.documents]
-    texts = [document.text for document in query.documents]
+    ids = [int(doc.uid) for doc in search.documents]
+    texts = [document.text for document in search.documents]
 
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
     # To do this, we first determine which of the incoming ids do not exist in the index
     indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
 
-    if query.query.text is None and query.query.uid not in indexed_ids:
-        query.query.text = normalize_documents([query.query.uid])
+    if search.query.text is None and search.query.uid not in indexed_ids:
+        search.query.text = normalize_documents([search.query.uid])
 
     for i, (id_, text) in enumerate(zip(ids, texts)):
         if text is None and id_ not in indexed_ids:
@@ -110,20 +123,21 @@ async def query(query: Query):
     to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
     if to_embed:
         ids, texts = zip(*to_embed)  # type: ignore
-        embeddings = encode(texts).cpu().numpy()
+        embeddings = encode(texts).cpu().numpy()  # type: ignore
         add_to_faiss_index(ids, embeddings, model.index)
 
     # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, query.top_k)
+    top_k = min(model.index.ntotal, search.top_k)
     # Embed the query and perform the search
-    query_embedding = encode(query.query.text).cpu().numpy()
+    query_embedding = encode(search.query.text).cpu().numpy()  # type: ignore
     top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
-    if int(query.query.uid) in top_k_indicies:
-        index = top_k_indicies.index(int(query.query.uid))
+
+    if int(search.query.uid) in top_k_indicies:
+        index = top_k_indicies.index(int(search.query.uid))
         del top_k_indicies[index], top_k_scores[index]
 
-    response = [Response(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
+    response = [TopMatch(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
     return response
