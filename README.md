@@ -1,5 +1,5 @@
 ![build](https://github.com/PathwayCommons/semantic-search/workflows/build/badge.svg)
-[![codecov](https://codecov.io/gh/PathwayCommons/semantic-search/branch/master/graph/badge.svg)](https://codecov.io/gh/PathwayCommons/semantic-search)
+[![codecov](https://codecov.io/gh/PathwayCommons/semantic-search/branch/master/graph/badge.svg?token=K7444IQC9I)](https://codecov.io/gh/PathwayCommons/semantic-search)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 ![GitHub](https://img.shields.io/github/license/PathwayCommons/semantic-search?color=blue)
 
