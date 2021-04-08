@@ -64,7 +64,7 @@ class PubDate(BaseModel):
     Season: Optional[str]
     MedlineDate: Optional[str]
 
-    @validator("MedlineDate")
+    @validator("MedlineDate", allow_reuse=True)
     def populate_year(cls, v, values):
         year_match = year_pattern.match(v)
         if year_match:
@@ -101,7 +101,7 @@ class Abstract(BaseModel):
     AbstractText: Union[str, dict, List[Union[dict, str]], None]
 
     # Can be str, dict, or list of dict/str
-    @validator("AbstractText")
+    @validator("AbstractText", allow_reuse=True)
     def combine_labels_and_texts(cls, v):
         update = ""
         if v and (isinstance(v, str) or isinstance(v, dict)):
@@ -122,7 +122,7 @@ class Article(BaseModel):
     # validators
     _textify_article_title = validator("ArticleTitle", allow_reuse=True)(get_element_text)
 
-    @validator("Abstract")
+    @validator("Abstract", allow_reuse=True)
     def merge_abstract_text(cls, v):
         return v.AbstractText
 
