@@ -22,7 +22,7 @@ def get_titles(pmids: List[str]):
     return titles
 
 
-def display_paper(title: str, pmid: str, score: float):
+def display_paper(title: str, pmid: str, score: float) -> None:
     link = f"{PUBMED_BASE_URL}{pmid}"
     col1, col2, col3 = st.beta_columns(3)
     col1.write(f"__{title}__")
