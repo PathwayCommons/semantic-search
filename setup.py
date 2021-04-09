@@ -49,9 +49,6 @@ setuptools.setup(
             "hypothesis",
             "mypy",
         ],
-        "demo": [
-            "streamlit>=0.8.0",
-            "watchdog>=2.0.2"
-        ]
+        "demo": ["streamlit", "watchdog"],
     },
 )
