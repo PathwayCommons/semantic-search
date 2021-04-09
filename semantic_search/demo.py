@@ -22,6 +22,15 @@ def get_titles(pmids: List[str]):
     return titles
 
 
+def display_paper(title: str, pmid: str, score: float):
+    link = f"{PUBMED_BASE_URL}{pmid}"
+    col1, col2, col3 = st.beta_columns(3)
+    col1.write(f"__{title}__")
+    col2.write(f"PMID: [{pmid}]({link})")
+    col3.write(f"Score: {result['score']:.4}")
+    st.write("---")
+
+
 st.sidebar.write(
     """
     # Scientific Semantic Search
@@ -85,7 +94,7 @@ if query_pmid:
     st.write(
         (
             f"Displaying the top {top_k} articles most similar to:"
-            f" [_{titles[str(query_pmid)]}_]({PUBMED_BASE_URL}{str(query_pmid)})"
+            f" [__{titles[query_pmid]}__]({PUBMED_BASE_URL}{query_pmid})"
         )
     )
     st.write("---")
@@ -93,10 +102,6 @@ if query_pmid:
     for result in response.json():
         # The cast to str is because the current, deployed version of semantic search
         # is casting all PMIDs to ints, but this is a bug and will be fixed soon.
-        title = titles.get(str(result["uid"]), "Couldn't find Title.")
-        link = f"{PUBMED_BASE_URL}{result['uid']}"
-        st.subheader(title)
-        st.text("")
-        st.write(f"__PMID__: [{result['uid']}]({link})")
-        st.write(f"__Score__: {result['score']:.2%}")
-        st.write("---")
+        pmid, score = str(result["uid"]), result["score"]
+        title = titles.get(pmid, "Couldn't find title.")
+        display_paper(title, pmid, score)
