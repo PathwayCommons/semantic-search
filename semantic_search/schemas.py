@@ -30,7 +30,7 @@ class Query(BaseModel):
     documents: List[Document] = []
     top_k: int = 10
 
-    @validator("query", "documents", pre=True)
+    @validator("query", "documents", pre=True, allow_reuse=True)
     def normalize_document(cls, v, field):
         if field.name == "query":
             v = [v]
@@ -43,7 +43,7 @@ class Query(BaseModel):
                 normalized_docs.append(doc)
         return normalized_docs[0] if field.name == "query" else normalized_docs
 
-    @validator("top_k")
+    @validator("top_k", allow_reuse=True)
     def top_k_must_be_gt_zero(cls, v):
         if not v > 0:
             raise ValueError(f"top_k must be greater than 0, got {v}")
