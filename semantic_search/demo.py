@@ -82,14 +82,19 @@ if query_pmid:
     titles = get_titles(pmids=pmids)
 
     st.write("# Results")
-    st.write(f"Displaying the top {top_k} articles most similar to: _{titles[str(query_pmid)]}_")
+    st.write(
+        (
+            f"Displaying the top {top_k} articles most similar to:"
+            f" [_{titles[str(query_pmid)]}_]({PUBMED_BASE_URL}{str(query_pmid)})"
+        )
+    )
     st.write("---")
 
     for result in response.json():
         # The cast to str is because the current, deployed version of semantic search
         # is casting all PMIDs to ints, but this is a bug and will be fixed soon.
         title = titles.get(str(result["uid"]), "Couldn't find Title.")
-        link = f"https://pubmed.ncbi.nlm.nih.gov/{result['uid']}"
+        link = f"{PUBMED_BASE_URL}{result['uid']}"
         st.subheader(title)
         st.text("")
         st.write(f"__PMID__: [{result['uid']}]({link})")
