@@ -4,28 +4,27 @@ import json
 
 URL = "https://semanticsearch.baderlab.org/"
 
-st.sidebar.header("Scientific Semantic Search")
 st.sidebar.write(
-    "A demo for [BaderLab's Scientific Semantic Search tool](https://github.com/PathwayCommons/semantic-search)."
-)
-st.sidebar.write(
-    "Entery a query PubMed Identifier (PMID) on the right and the most similar articles will be returned."
-)
-st.sidebar.write(
-    (
-        "Similarity is determined using a [deep neural network](https://huggingface.co/johngiorgi/declutr-sci-base)"
-        " which operates on the articles title and abstract."
-    )
+    """
+    # Scientific Semantic Search
+
+    A demo for [BaderLab's Scientific Semantic Search tool](https://github.com/PathwayCommons/semantic-search).
+
+    Enter a query PubMed Identifier (PMID) on the right and the most similar articles will be returned.
+
+    Similarity is determined using a [deep neural network](https://huggingface.co/johngiorgi/declutr-sci-base)
+    which operates on the articles title and abstract.
+
+    ## Additional settings
+    """
 )
 
-st.sidebar.markdown("## Additional settings")
 
 st.sidebar.subheader("Top K")
-
-# Add a slider to the sidebar:
 top_k = st.sidebar.slider(
     "Select the number of documents to include in the results", 1, 100, value=(10)
 )
+
 
 st.sidebar.subheader("PMIDs to Include")
 document_ids = []
