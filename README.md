@@ -5,7 +5,7 @@
 
 # Scientific Semantic Search
 
-A simple semantic search engine for scientific papers. Check out our demo [here](https://share.streamlit.io/pathwaycommons/semantic-search/master/semantic_search/demo.py).
+A simple semantic search engine for scientific papers. Check out our demo [here](https://share.streamlit.io/pathwaycommons/semantic-search/semantic_search/demo.py).
 
 ## Installation
 
