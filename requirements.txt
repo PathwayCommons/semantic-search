@@ -1,1 +1,2 @@
-streamlit==0.80.0
+streamlit
+validators

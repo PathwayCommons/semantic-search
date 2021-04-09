@@ -49,6 +49,6 @@ setuptools.setup(
             "hypothesis",
             "mypy",
         ],
-        "demo": ["streamlit", "watchdog"],
+        "demo": ["streamlit", "watchdog", "validators"],
     },
 )
