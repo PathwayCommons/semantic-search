@@ -48,6 +48,10 @@ setuptools.setup(
             "pytest-cov",
             "hypothesis",
             "mypy",
+        ],
+        "demo": [
+            "streamlit>=0.8.0",
+            "watchdog>=2.0.2"
         ]
     },
 )
