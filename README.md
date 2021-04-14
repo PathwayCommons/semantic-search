@@ -49,7 +49,7 @@ To provide arguments to the server, pass them as environment variables, e.g.:
 CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app
 ```
 
-Once the server is running, you can make a POST request to the `/search` endpoint with a `JSON` body. E.g.
+Once the server is running, you can make a POST request to the `/search` endpoint with a JSON body. E.g.
 
 ```json
 {
