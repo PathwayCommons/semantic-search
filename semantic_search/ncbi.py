@@ -10,6 +10,7 @@ import requests
 from Bio import Medline
 from dotenv import load_dotenv
 from pydantic import BaseSettings
+from fastapi import HTTPException
 
 log = logging.getLogger(__name__)
 
@@ -99,8 +100,7 @@ def _medline_to_docs(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
     docs = []
     for record in records:
         if "PMID" not in record:
-            logging.warn(f"No PMID for {json.dumps(record)}")
-            continue
+            raise HTTPException(status_code=422, detail=f"No PMID for {json.dumps(record)}")
         pmid = record["PMID"]
         abstract = record["AB"] if "AB" in record else ""
         title = record["TI"] if "TI" in record else ""
