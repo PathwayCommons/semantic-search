@@ -49,29 +49,35 @@ To provide arguments to the server, pass them as environment variables, e.g.:
 CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app
 ```
 
-Once the server is running, you can make a POST request with `JSON` body. E.g.
+Once the server is running, you can make a POST request to the `/search` endpoint with a JSON body. E.g.
 
 ```json
 {
-    "query": {
-        "uid":"9887103",
-        "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
+  "query": {
+    "uid": "9887103",
+    "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development."
+  },
+  "documents": [
+    {
+      "uid": "10320478",
+      "text": "Drosophila dSmad2 and Atr-I transmit activin/TGFbeta signals. "
     },
-    "documents":[
-        {
-            "uid": "9887103",
-            "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
-        },
-        {
-            "uid": "30049242",
-            "text": "Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection. The common fruit fly Drosophila melanogaster is an exceptional model for dissecting innate immunity..."
-        },
-        {
-            "uid": "22936248",
-            "text": "High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression. Many eukaryotic genes possess multiple alternative promoters with distinct expression specificities..."
-        }
-    ],
-    "top_k":2
+    {
+      "uid": "22563507",
+      "text": "R-Smad competition controls activin receptor output in Drosophila. "
+    },
+    {
+      "uid": "18820452",
+      "text": "Distinct signaling of Drosophila Activin/TGF-beta family members. "
+    },
+    {
+      "uid": "10357889"
+    },
+    {
+      "uid": "31270814"
+    }
+  ],
+  "top_k": 3
 }
 ```
 
@@ -79,14 +85,18 @@ The return value is a JSON representation of the `top_k` most similar documents 
 
 ```json
 [
-    {
-        "uid": 30049242,
-        "score": 0.6427373886108398
-    },
-    {
-        "uid": 22936248,
-        "score": 0.49102723598480225
-    }
+  {
+    "uid": "10320478",
+    "score": 0.6997108459472656
+  },
+  {
+    "uid": "22563507",
+    "score": 0.6877762675285339
+  },
+  {
+    "uid": "18820452",
+    "score": 0.6436074376106262
+  }
 ]
 ```
 
