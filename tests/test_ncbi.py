@@ -37,4 +37,4 @@ def test_parse_medline():
 def test_uids_to_docs():
     uids = ["9887103"]
     #checking if generator is returned, need to check integrity of the returned value
-    assert isinstance(uids_to_docs(uids),types.GeneratorType) == True
+    assert isinstance(uids_to_docs(uids),types.GeneratorType)
