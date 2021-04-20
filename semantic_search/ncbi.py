@@ -100,7 +100,7 @@ def _medline_to_docs(records: List[Dict[str, str]]) -> List[Dict[str, str]]:
     docs = []
     for record in records:
         if "PMID" not in record:
-            raise HTTPException(status_code=422, detail=json.dumps((record["id:"][-1])))
+            raise HTTPException(status_code=422, detail=record["id:"][-1])
         pmid = record["PMID"]
         abstract = record["AB"] if "AB" in record else ""
         title = record["TI"] if "TI" in record else ""
