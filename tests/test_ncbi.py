@@ -35,7 +35,7 @@ def test_safe_request():
 
 def test_get_eutil_records():
     eutil = "efetch"
-    id = "9887103"
+    _id = "9887103"
     expected_response = [
         {
             "<?xm": ['version="1.0" ?>'],
@@ -2033,7 +2033,7 @@ def test_get_eutil_records():
         },
         {"</Pu": ["edArticleSet>"]},
     ]
-    actual_response = _get_eutil_records(eutil, id)
+    actual_response = _get_eutil_records(eutil, _id)
     assert isinstance(actual_response, types.GeneratorType)
     assert list(actual_response) == expected_response
 
