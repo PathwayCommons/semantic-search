@@ -37,7 +37,7 @@ def test_get_eutil_records():
     eutil = "efetch"
     id = "9887103"
     expected_response = '<generator object parse at 0x7f562cfe9900>'
-    actual_response = str(_get_eutil_records(eutil,id))
+    actual_response = list(_get_eutil_records(eutil,id))
     assert isinstance(_get_eutil_records(eutil, id), types.GeneratorType)
     assert actual_response == expected_response
 
