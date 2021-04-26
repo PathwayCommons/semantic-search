@@ -72,11 +72,11 @@ def _parse_medline(text: str) -> List[dict]:
     return medline_records
 
 
-def _get_eutil_records(eutil: str, id: List[str], **opts) -> List[Dict[Any, Any]]:
+def _get_eutil_records(eutil: str, _id: List[str], **opts) -> List[Dict[Any, Any]]:
     """Call one of the NCBI EUTILITIES and returns data as Python objects."""
     eutils_params = {
         "db": "pubmed",
-        "id": ",".join(id),
+        "id": ",".join(_id),
         "retstart": 0,
         "retmode": "xml",
         "api_key": settings.ncbi_eutils_api_key,
@@ -116,10 +116,10 @@ def uids_to_docs(uids: List[str]) -> Generator[List[Dict[str, str]], None, None]
     for i in range(num_queries):
         lower = i * MAX_EFETCH_RETMAX
         upper = min([lower + MAX_EFETCH_RETMAX, num_uids])
-        id = uids[lower:upper]
+        _id = uids[lower:upper]
         try:
             start_time = time.time()
-            eutil_response = _get_eutil_records("efetch", id, rettype="medline", retmode="text")
+            eutil_response = _get_eutil_records("efetch", _id, rettype="medline", retmode="text")
             duration = time.time() - start_time
             logging.info(
                 f"Retrieved docs {lower} through {upper - 1} of {num_uids - 1} in {duration}s"
