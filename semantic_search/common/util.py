@@ -6,6 +6,10 @@ import numpy as np
 import torch
 import typer
 from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+from semantic_search.schemas import Document
+from semantic_search.ncbi import uids_to_docs
+
+UID = str
 
 
 class Emoji(Enum):
@@ -113,3 +117,10 @@ def add_to_faiss_index(ids: List[int], embeddings: np.ndarray, index: faiss.Inde
     ids = np.asarray(ids).astype("int64")
     embeddings = embeddings.astype("float32")
     index.add_with_ids(embeddings, ids)
+
+
+def normalize_documents(pmids: List[str]) -> str:
+    normalized_docs = []
+    for doc in pmids:
+        normalized_docs.append(Document(**list(uids_to_docs([doc]))[0][0]))
+    return normalized_docs[0].text  # type: ignore

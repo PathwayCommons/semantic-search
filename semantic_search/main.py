@@ -1,9 +1,11 @@
+from datetime import datetime
+from http import HTTPStatus
 from operator import itemgetter
-from typing import Dict, List, Optional, Tuple, Union, cast
+from typing import List, Optional, Tuple, Union, cast
 
 import faiss
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseSettings
 
 from semantic_search import __version__
@@ -12,8 +14,9 @@ from semantic_search.common.util import (
     encode_with_transformer,
     setup_faiss_index,
     setup_model_and_tokenizer,
+    normalize_documents,
 )
-from semantic_search.schemas import Model, Query
+from semantic_search.schemas import Model, Search, TopMatch
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -83,42 +86,58 @@ def app_startup():
     model.index = setup_faiss_index(embedding_dim)
 
 
-@app.post("/")
-async def query(query: Query) -> List[Dict[str, float]]:
-    ids = [int(doc.uid) for doc in query.documents]
-    texts = [document.text for document in query.documents]
+@app.get("/", tags=["General"])
+def index(request: Request):
+    """Health check."""
+    response = {
+        "message": HTTPStatus.OK.phrase,
+        "method": request.method,
+        "status-code": HTTPStatus.OK,
+        "timestamp": datetime.now().isoformat(),
+        "url": request.url._url,
+    }
+    return response
 
-    # # Ensure that the query is not in the index when we search.
-    # query_id = np.asarray(int(query.query.uid)).reshape(
-    #     1,
-    # )
-    # model.index.remove_ids(query_id)
+
+@app.post("/search", tags=["Search"], response_model=List[TopMatch])
+async def search(search: Search):
+    """Returns the `top_k` most similar documents to `query` from the provided list of `documents`
+    and the index.
+    """
+    ids = [int(doc.uid) for doc in search.documents]
+    texts = [document.text for document in search.documents]
 
     # Only add items to the index if they do not already exist.
     # See: https://github.com/facebookresearch/faiss/issues/859
     # To do this, we first determine which of the incoming ids do not exist in the index
     indexed_ids = set(faiss.vector_to_array(model.index.id_map).tolist())
-    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
+
+    if search.query.text is None and search.query.uid not in indexed_ids:
+        search.query.text = normalize_documents([search.query.uid])
+
+    for i, (id_, text) in enumerate(zip(ids, texts)):
+        if text is None and id_ not in indexed_ids:
+            texts[i] = normalize_documents([str(id_)])
+
     # We then embed the corresponding text and update the index
+    to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
     if to_embed:
         ids, texts = zip(*to_embed)  # type: ignore
-        embeddings = encode(texts).cpu().numpy()
+        embeddings = encode(texts).cpu().numpy()  # type: ignore
         add_to_faiss_index(ids, embeddings, model.index)
 
     # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, query.top_k + 1)
-
+    top_k = min(model.index.ntotal, search.top_k)
     # Embed the query and perform the search
-    query_embedding = encode(query.query.text).cpu().numpy()
+    query_embedding = encode(search.query.text).cpu().numpy()  # type: ignore
     top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
 
-    if int(query.query.uid) in top_k_indicies:
-        index = top_k_indicies.index(int(query.query.uid))
+    if int(search.query.uid) in top_k_indicies:
+        index = top_k_indicies.index(int(search.query.uid))
         del top_k_indicies[index], top_k_scores[index]
-    else:
-        del top_k_indicies[-1], top_k_scores[-1]
 
-    return [{"uid": uid, "score": score} for uid, score in zip(top_k_indicies, top_k_scores)]
+    response = [TopMatch(uid=uid, score=score) for uid, score in zip(top_k_indicies, top_k_scores)]
+    return response

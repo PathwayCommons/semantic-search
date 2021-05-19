@@ -1,5 +1,5 @@
 ![build](https://github.com/PathwayCommons/semantic-search/workflows/build/badge.svg)
-[![codecov](https://codecov.io/gh/PathwayCommons/semantic-search/branch/master/graph/badge.svg)](https://codecov.io/gh/PathwayCommons/semantic-search)
+[![codecov](https://codecov.io/gh/PathwayCommons/semantic-search/branch/master/graph/badge.svg?token=K7444IQC9I)](https://codecov.io/gh/PathwayCommons/semantic-search)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 ![GitHub](https://img.shields.io/github/license/PathwayCommons/semantic-search?color=blue)
 
@@ -49,64 +49,58 @@ To provide arguments to the server, pass them as environment variables, e.g.:
 CUDA_DEVICE=0 MAX_LENGTH=384 uvicorn semantic_search.main:app
 ```
 
-Once the server is running, you can make a POST request with:
+Once the server is running, you can make a POST request to the `/search` endpoint with a JSON body. E.g.
 
-1. JSON body that is self-contained. Provide the text in `query` and text in `documents` to search against. Sample JSON request:
-
-    ```json
+```json
+{
+  "query": {
+    "uid": "9887103",
+    "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development."
+  },
+  "documents": [
     {
-        "query": {
-            "uid":"9887103",
-            "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
-        },
-        "documents":[
-            {
-                "uid": "9887103",
-                "text": "The Drosophila activin receptor baboon signals through dSmad2 and controls cell proliferation but not patterning during larval development. The TGF-beta superfamily of growth and differentiation factors, including TGF-beta, Activins and bone morphogenetic proteins (BMPs) play critical roles in regulating the development of many organisms..."
-            },
-            {
-                "uid": "30049242",
-                "text": "Transcriptional up-regulation of the TGF-β intracellular signaling transducer Mad of Drosophila larvae in response to parasitic nematode infection. The common fruit fly Drosophila melanogaster is an exceptional model for dissecting innate immunity..."
-            },
-            {
-                "uid": "22936248",
-                "text": "High-fidelity promoter profiling reveals widespread alternative promoter usage and transposon-driven developmental gene expression. Many eukaryotic genes possess multiple alternative promoters with distinct expression specificities..."
-            }
-        ],
-        "top_k":2
-    }
-    ```
-
-    The return value is a JSON representation of the `top_k` most similar documents (default: return all, except the query itself):
-
-    ```json
-    [
-        {
-            "uid": 30049242,
-            "score": 0.6427373886108398
-        },
-        {
-            "uid": 22936248,
-            "score": 0.49102723598480225
-        }
-    ]
-    ```
-
-    - NB: In this case, each `uid` in `documents` should be unique, but otherwise have no meaning.
-
-2. JSON body that references PubMed article uids. Sample JSON request:
-
-    ```json
+      "uid": "10320478",
+      "text": "Drosophila dSmad2 and Atr-I transmit activin/TGFbeta signals. "
+    },
     {
-        "query": "9887103",
-        "documents": ["9887103", "30049242", "22936248"],
-        "top_k": 2
+      "uid": "22563507",
+      "text": "R-Smad competition controls activin receptor output in Drosophila. "
+    },
+    {
+      "uid": "18820452",
+      "text": "Distinct signaling of Drosophila Activin/TGF-beta family members. "
+    },
+    {
+      "uid": "10357889"
+    },
+    {
+      "uid": "31270814"
     }
-    ```
+  ],
+  "top_k": 3
+}
+```
 
-    - Notes:
-      - For each Document element, the text consists of the `ArticleTitle` appended to `Abstract` for that PubMed article. See [pubmed DTD](https://dtd.nlm.nih.gov/ncbi/pubmed/doc/out/180101/index.html)
-      - JSON body may consist of either objects (as in Case 1) or PMID strings for `query` and elements of `documents`. However, the elements of `documents` must either be all be a single type.
+The return value is a JSON representation of the `top_k` most similar documents (defaults to 10):
+
+```json
+[
+  {
+    "uid": "10320478",
+    "score": 0.6997108459472656
+  },
+  {
+    "uid": "22563507",
+    "score": 0.6877762675285339
+  },
+  {
+    "uid": "18820452",
+    "score": 0.6436074376106262
+  }
+]
+```
+
+If `"text"` is not provided, we assume `"uid"`s are valid PMIDs and fetch the title and abstract text before embedding, indexing and searching.
 
 ### Running via Docker
 
