@@ -1,7 +1,7 @@
 import json
 from typing import List
 
-import requests
+import requests  # type: ignore
 import streamlit as st
 import validators
 
