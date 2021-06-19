@@ -1,3 +1,14 @@
+"""
+Simple check list for releasing
+
+1. Bump `version` in `setup.py`
+2. Bump the corresponding `version` in `tests/test_semantic_search.py`
+4. Commit these changes with the message: ":bookmark: Release: v<version>"
+5. Add a tag in git to mark the release: "git tag v<version> -m 'Adds tag v<version> for release' "
+   Push the tag to git: git push --tags origin main
+6. Optionally add some release notes to the tag in GitHub
+"""
+
 import setuptools
 
 with open("README.md", "r") as fh:
