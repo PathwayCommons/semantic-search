@@ -39,7 +39,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --statistics
     - name: Type check with mypy
       run: |
-        mypy . --cache-dir=/dev/null
+        mypy . --ignore-missing-imports --cache-dir=/dev/null
     - name: Test with pytest
       run: |
         pytest tests --cov ./semantic_search --cov-report=xml --cov-config=./.coveragerc
