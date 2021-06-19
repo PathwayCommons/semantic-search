@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Generator
 import logging
 import time
 
-import requests
+import requests  # type: ignore
 from Bio import Medline
 from dotenv import load_dotenv
 from pydantic import BaseSettings
