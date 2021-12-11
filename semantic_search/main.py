@@ -31,7 +31,7 @@ logger.add(
     sys.stdout,
     colorize=True,
     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | {level} | <level>{message}</level>",
-    level=os.getenv("LOG_LEVEL", "DEBUG")
+    level=os.getenv("LOG_LEVEL", "DEBUG"),
 )
 
 app = FastAPI(

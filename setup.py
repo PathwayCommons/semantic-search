@@ -49,7 +49,7 @@ setuptools.setup(
         "typer>=0.3.2",
         "python-dotenv>=0.15.0",
         "xmltodict>=0.12.0",
-        "loguru>=0.5.3"
+        "loguru>=0.5.3",
     ],
     extras_require={
         "dev": [
