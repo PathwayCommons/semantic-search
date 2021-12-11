@@ -155,3 +155,5 @@ docker run --gpus all -dt --rm --name semantic_container -p 8000:8000 --env CUDA
 ## Documentation
 
 With the web server running, open [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc) in your browser for the API documentation.
+
+For contributing guidelines, see [`CONTRIBUTING.md`](./CONTRIBUTING.md).
