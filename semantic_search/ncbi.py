@@ -1,15 +1,15 @@
 import io
 import os
-from pathlib import Path
-from typing import Any, Dict, List, Generator
-from loguru import logger
 import time
+from pathlib import Path
+from typing import Any, Dict, Generator, List, Union
 
 import requests  # type: ignore
 from Bio import Medline
 from dotenv import load_dotenv
-from pydantic import BaseSettings
 from fastapi import HTTPException
+from loguru import logger
+from pydantic import BaseSettings
 
 
 def _compact(input: List) -> List:
@@ -61,7 +61,7 @@ def _safe_request(url: str, method: str = "GET", headers={}, **opts):
         return r
 
 
-def _parse_medline(text: str) -> List[dict]:
+def _parse_medline(text: str) -> List[Dict[str, Any]]:
     """Convert the rettype=medline to dict.
     See https://www.nlm.nih.gov/bsd/mms/medlineelements.html
     """
@@ -70,11 +70,12 @@ def _parse_medline(text: str) -> List[dict]:
     return medline_records
 
 
-def _get_eutil_records(eutil: str, _id: List[str], **opts) -> List[Dict[Any, Any]]:
+def _get_eutil_records(eutil: str, ids: Union[str, List[str]], **opts) -> List[Dict[str, Any]]:
     """Call one of the NCBI EUTILITIES and returns data as Python objects."""
+    ids = [ids] if isinstance(ids, str) else ids
     eutils_params = {
         "db": "pubmed",
-        "id": ",".join(_id),
+        "id": ",".join(ids),
         "retstart": 0,
         "retmode": "xml",
         "api_key": settings.ncbi_eutils_api_key,
@@ -114,10 +115,10 @@ def uids_to_docs(uids: List[str]) -> Generator[List[Dict[str, str]], None, None]
     for i in range(num_queries):
         lower = i * MAX_EFETCH_RETMAX
         upper = min([lower + MAX_EFETCH_RETMAX, num_uids])
-        _id = uids[lower:upper]
+        ids = uids[lower:upper]
         try:
             start_time = time.time()
-            eutil_response = _get_eutil_records("efetch", _id, rettype="medline", retmode="text")
+            eutil_response = _get_eutil_records("efetch", ids, rettype="medline", retmode="text")
             duration = time.time() - start_time
             logger.debug(
                 f"Retrieved docs {lower} through {upper - 1} of {num_uids - 1} in {duration}s"
