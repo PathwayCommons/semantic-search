@@ -3,6 +3,7 @@ from http import HTTPStatus
 from operator import itemgetter
 from typing import List, Optional, Tuple, Union, cast
 
+import logging
 import faiss
 import torch
 from fastapi import FastAPI, Request
@@ -17,6 +18,7 @@ from semantic_search.common.util import (
     normalize_documents,
 )
 from semantic_search.schemas import Model, Search, TopMatch
+from fastapi import HTTPException
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -116,8 +118,13 @@ async def search(search: Search):
         search.query.text = normalize_documents([search.query.uid])
 
     for i, (id_, text) in enumerate(zip(ids, texts)):
-        if text is None and id_ not in indexed_ids:
-            texts[i] = normalize_documents([str(id_)])
+        try:
+            if text is None and id_ not in indexed_ids:
+                texts[i] = normalize_documents([str(id_)])
+        except HTTPException:
+            # Some bogus PMID - set text as empty string
+            logging.warn(f"Error encountered in normalize_documents: {id_}")
+            texts[i] = ""
 
     # We then embed the corresponding text and update the index
     to_embed = [(id_, text) for id_, text in zip(ids, texts) if id_ not in indexed_ids]
