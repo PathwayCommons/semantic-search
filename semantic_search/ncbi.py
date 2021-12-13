@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 import time
 from pathlib import Path
@@ -9,9 +8,8 @@ import requests  # type: ignore
 from Bio import Medline
 from dotenv import load_dotenv
 from fastapi import HTTPException
+from loguru import logger
 from pydantic import BaseSettings
-
-log = logging.getLogger(__name__)
 
 
 def _compact(input: List) -> List:
@@ -51,13 +49,13 @@ def _safe_request(url: str, method: str = "GET", headers={}, **opts):
         )
         r.raise_for_status()
     except requests.exceptions.Timeout as e:
-        logging.error(f"Timeout error {e}")
+        logger.error(f"Timeout error {e}")
         raise
     except requests.exceptions.HTTPError as e:
-        logging.error(f"HTTP error {e}; status code: {r.status_code}")
+        logger.error(f"HTTP error {e}; status code: {r.status_code}")
         raise
     except requests.exceptions.RequestException as e:
-        logging.error(f"Error in request {e}")
+        logger.error(f"Error in request {e}")
         raise
     else:
         return r
@@ -122,12 +120,12 @@ def uids_to_docs(uids: List[str]) -> Generator[List[Dict[str, str]], None, None]
             start_time = time.time()
             eutil_response = _get_eutil_records("efetch", ids, rettype="medline", retmode="text")
             duration = time.time() - start_time
-            logging.info(
+            logger.debug(
                 f"Retrieved docs {lower} through {upper - 1} of {num_uids - 1} in {duration}s"
             )
         except Exception as e:
-            logging.warn(f"Error encountered in uids_to_docs: {e}")
-            logging.warn(f"Bypassing docs {lower} through {upper - 1} of {num_uids - 1}")
+            logger.warn(f"Error encountered in uids_to_docs: {e}")
+            logger.warn(f"Bypassing docs {lower} through {upper - 1} of {num_uids - 1}")
             continue
         else:
             yield _medline_to_docs(eutil_response)

@@ -18,6 +18,22 @@ from semantic_search.common.util import (
     normalize_documents,
 )
 from semantic_search.schemas import Model, Search, TopMatch
+from loguru import logger
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+dot_env_filepath = Path(__file__).absolute().parent.parent / ".env"
+load_dotenv(dot_env_filepath)
+
+logger.remove()
+logger.add(
+    sys.stdout,
+    colorize=True,
+    format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | {level} | <level>{message}</level>",
+    level=os.getenv("LOG_LEVEL", "DEBUG"),
+)
 from fastapi import HTTPException
 
 app = FastAPI(
@@ -86,6 +102,19 @@ def app_startup():
     )
     embedding_dim = model.model.config.hidden_size
     model.index = setup_faiss_index(embedding_dim)
+
+
+@app.middleware("http")
+async def log_middle(request: Request, call_next):
+
+    response = await call_next(request)
+    status = response.status_code
+    method = request.method
+    path = request.url.path
+    user_agent = request.headers.get("User-Agent")
+    logger.info(f"{method} {path} {status} {user_agent}")
+
+    return response
 
 
 @app.get("/", tags=["General"])
