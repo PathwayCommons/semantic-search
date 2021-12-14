@@ -66,7 +66,7 @@ def followup_request_with_test() -> Request:
                 "text": "Members of TGFbeta superfamily are found to play important roles in many cellular...",
             },
         ],
-        "use_docs": True,
+        "docs_only": True,
     }
     # We don't actually test scores, so use a dummy value of -1
     response = [

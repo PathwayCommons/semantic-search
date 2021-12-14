@@ -167,7 +167,7 @@ async def search(search: Search):
     # Can't search for more items than exist in the index
     top_k = min(num_indexed, search.top_k)
 
-    if search.use_docs:
+    if search.docs_only:
         top_k = num_indexed
 
     # Perform the search
@@ -177,7 +177,7 @@ async def search(search: Search):
     top_k_scores = top_k_scores.reshape(-1).tolist()
 
     # Pick out results for the incoming ids in search.documents
-    if search.use_docs:
+    if search.docs_only:
         documents_positions = [top_k_indicies.index(id) for id in ids]
         top_k_indicies = ids
         top_k_scores = [top_k_scores[position] for position in documents_positions]
