@@ -132,7 +132,7 @@ def index(request: Request):
 @app.post("/search", tags=["Search"], response_model=List[TopMatch])
 async def search(search: Search):
     """Returns the `top_k` most similar documents to `query` from the provided list of `documents`
-    and the index.
+    and the index. When docs_only is True, returns all `documents` provided, and disregards `top_k`.
     """
     ids = [int(doc.uid) for doc in search.documents]
     texts = [document.text for document in search.documents]

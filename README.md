@@ -102,6 +102,10 @@ The return value is a JSON representation of the `top_k` most similar documents 
 
 If `"text"` is not provided, we assume `"uid"`s are valid PMIDs and fetch the title and abstract text before embedding, indexing and searching.
 
+- Notes on optional parameters
+  - `top_k`: A positive integer (default is 10) that limits the search results to this many of the most similar neighbours (articles)
+  - `docs_only`: A boolean (default is false) that instructs the service to return scores for the provided `documents`. If true, top_k is disregarded.
+
 ### Running via Docker
 
 #### Setup
