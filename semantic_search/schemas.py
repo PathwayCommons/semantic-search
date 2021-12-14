@@ -20,6 +20,7 @@ class Search(BaseModel):
     query: Document
     documents: List[Document] = []
     top_k: int = Field(10, gt=0, description="top_k must be greater than 0")
+    docs_only: bool = False
 
     class Config:
         schema_extra = {

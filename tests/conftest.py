@@ -43,3 +43,35 @@ def dummy_request_with_test() -> Request:
     # We don't actually test scores, so use a dummy value of -1
     response = [{"uid": "30049242", "score": -1}, {"uid": "22936248", "score": -1}]
     return json.dumps(request), response
+
+
+@pytest.fixture(scope="module")
+def followup_request_with_test() -> Request:
+    request = {
+        "query": {
+            "uid": "9813169",
+            "text": "TGF-beta signaling from the cell surface to the nucleus is mediated by the SMAD...",
+        },
+        "documents": [
+            {
+                "uid": "10320478",
+                "text": "Much is known about the three subfamilies of the TGFbeta superfamily in vertebrates...",
+            },
+            {
+                "uid": "10357889",
+                "text": "The transforming growth factor-beta (TGF-beta) superfamily encompasses a large...",
+            },
+            {
+                "uid": "15473904",
+                "text": "Members of TGFbeta superfamily are found to play important roles in many cellular...",
+            },
+        ],
+        "docs_only": True,
+    }
+    # We don't actually test scores, so use a dummy value of -1
+    response = [
+        {"uid": "10320478", "score": -1},
+        {"uid": "10357889", "score": -1},
+        {"uid": "15473904", "score": -1},
+    ]
+    return json.dumps(request), response

@@ -1,6 +1,5 @@
 from typing import Dict, List, Tuple
 
-
 import numpy as np
 from fastapi.testclient import TestClient
 
@@ -48,3 +47,20 @@ class TestMain:
         assert len(expected_uids) == len(actual_uids)
         assert set(actual_uids) == set(expected_uids)
         assert all(0 <= score <= 1 for score in actual_scores)
+
+    def test_restrict_search_to_documents(
+        self, dummy_request_with_test: Request, followup_request_with_test: Request
+    ):
+        # Dope the index
+        dummy_request, _ = dummy_request_with_test
+        dummy_response = client.post("/search", dummy_request)
+        assert dummy_response.status_code == 200
+
+        # Do the search of interest
+        request, expected_response = followup_request_with_test
+        actual_response = client.post("/search", request)
+        assert actual_response.status_code == 200
+
+        actual_uids = [item["uid"] for item in actual_response.json()]
+        expected_uids = [item["uid"] for item in expected_response]
+        assert set(actual_uids) == set(expected_uids)

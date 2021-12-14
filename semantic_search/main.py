@@ -3,7 +3,6 @@ from http import HTTPStatus
 from operator import itemgetter
 from typing import List, Optional, Tuple, Union, cast
 
-import logging
 import faiss
 import torch
 from fastapi import FastAPI, Request
@@ -23,6 +22,7 @@ import sys
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+from fastapi import HTTPException
 
 dot_env_filepath = Path(__file__).absolute().parent.parent / ".env"
 load_dotenv(dot_env_filepath)
@@ -34,7 +34,6 @@ logger.add(
     format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | {level} | <level>{message}</level>",
     level=os.getenv("LOG_LEVEL", "DEBUG"),
 )
-from fastapi import HTTPException
 
 app = FastAPI(
     title="Scientific Semantic Search",
@@ -133,7 +132,7 @@ def index(request: Request):
 @app.post("/search", tags=["Search"], response_model=List[TopMatch])
 async def search(search: Search):
     """Returns the `top_k` most similar documents to `query` from the provided list of `documents`
-    and the index.
+    and the index. When docs_only is True, returns all `documents` provided, and disregards `top_k`.
     """
     ids = [int(doc.uid) for doc in search.documents]
     texts = [document.text for document in search.documents]
@@ -152,7 +151,7 @@ async def search(search: Search):
                 texts[i] = normalize_documents([str(id_)])
         except HTTPException:
             # Some bogus PMID - set text as empty string
-            logging.warn(f"Error encountered in normalize_documents: {id_}")
+            logger.warn(f"Error encountered in normalize_documents: {id_}")
             texts[i] = ""
 
     # We then embed the corresponding text and update the index
@@ -162,14 +161,26 @@ async def search(search: Search):
         embeddings = encode(texts).cpu().numpy()  # type: ignore
         add_to_faiss_index(ids, embeddings, model.index)
 
-    # Can't search for more items than exist in the index
-    top_k = min(model.index.ntotal, search.top_k)
-    # Embed the query and perform the search
+    # Embed the query
     query_embedding = encode(search.query.text).cpu().numpy()  # type: ignore
+    num_indexed = model.index.ntotal
+    # Can't search for more items than exist in the index
+    top_k = min(num_indexed, search.top_k)
+
+    if search.docs_only:
+        top_k = num_indexed
+
+    # Perform the search
     top_k_scores, top_k_indicies = model.index.search(query_embedding, top_k)
 
     top_k_indicies = top_k_indicies.reshape(-1).tolist()
     top_k_scores = top_k_scores.reshape(-1).tolist()
+
+    # Pick out results for the incoming ids in search.documents
+    if search.docs_only:
+        documents_positions = [top_k_indicies.index(id) for id in ids]
+        top_k_indicies = ids
+        top_k_scores = [top_k_scores[position] for position in documents_positions]
 
     if int(search.query.uid) in top_k_indicies:
         index = top_k_indicies.index(int(search.query.uid))
