@@ -124,8 +124,8 @@ def uids_to_docs(uids: List[str]) -> Generator[List[Dict[str, str]], None, None]
                 f"Retrieved docs {lower} through {upper - 1} of {num_uids - 1} in {duration}s"
             )
         except Exception as e:
-            logger.warn(f"Error encountered in uids_to_docs: {e}")
-            logger.warn(f"Bypassing docs {lower} through {upper - 1} of {num_uids - 1}")
+            logger.warning(f"Error encountered in uids_to_docs: {e}")
+            logger.warning(f"Bypassing docs {lower} through {upper - 1} of {num_uids - 1}")
             continue
         else:
             yield _medline_to_docs(eutil_response)

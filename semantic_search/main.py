@@ -151,7 +151,7 @@ async def search(search: Search):
                 texts[i] = normalize_documents([str(id_)])
         except HTTPException:
             # Some bogus PMID - set text as empty string
-            logger.warn(f"Error encountered in normalize_documents: {id_}")
+            logger.warning(f"Error encountered in normalize_documents: {id_}")
             texts[i] = ""
 
     # We then embed the corresponding text and update the index
